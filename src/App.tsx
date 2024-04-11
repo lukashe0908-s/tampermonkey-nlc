@@ -229,35 +229,32 @@ export default function App() {
           </Button>
           <Box
             component='section'
-            className={`!rounded-lg border-2 ${
-              downloadFinished ? 'border-green-400' : 'border-yellow-400'
-            } border-dashed transition-all`}
+            className={`!rounded-lg border-2 ${downloadFinished ? 'border-green-400' : 'border-yellow-400'} border-dashed transition-all`}
           >
             <VirtuosoGrid
-              listClassName='flex flex-none flex-wrap !p-1'
-              itemClassName='w-1/3 p-1'
-              style={{ height: 400 }}
-              className='h-full w-full'
+              listClassName='flex flex-wrap'
+              itemClassName='w-1/3 flex-none p-1'
+              style={{ height: 300 }}
               totalCount={fileList.length}
               itemContent={index => {
-                return (
-                  <Button
-                    className='border-blue-400 cursor-pointer !rounded-lg w-full flex-col'
-                    key={fileList[index].index}
-                    variant='outlined'
-                    onClick={() => {
-                      downloadFile(fileList[index], title, downloadCountTotal_length);
-                    }}
-                  >
-                    <div className='normal-case break-all'>{title}</div>
-                    <div className='normal-case flex gap-1 text-white'>
-                      <div className='px-1 rounded-md bg-blue-600'>
-                        {(fileList[index].index + 1).toString().padStart(downloadCountTotal_length, '0')}
+                if (fileList[index])
+                  return (
+                    <Button
+                      className='border-blue-400 cursor-pointer !rounded-lg w-full flex-col'
+                      variant='outlined'
+                      onClick={() => {
+                        downloadFile(fileList[index], title, downloadCountTotal_length);
+                      }}
+                    >
+                      <div className='normal-case break-all'>{title}</div>
+                      <div className='normal-case flex gap-1 text-white'>
+                        <div className='px-1 rounded-md bg-blue-600'>
+                          {(fileList[index].index + 1).toString().padStart(downloadCountTotal_length, '0')}
+                        </div>
+                        <div className='px-1 rounded-md bg-cyan-600'>{formatFileSize(fileList[index].size)}</div>
                       </div>
-                      <div className='px-1 rounded-md bg-cyan-600'>{formatFileSize(fileList[index].size)}</div>
-                    </div>
-                  </Button>
-                );
+                    </Button>
+                  );
               }}
             ></VirtuosoGrid>
           </Box>
