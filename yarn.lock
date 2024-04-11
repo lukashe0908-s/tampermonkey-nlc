@@ -11320,11 +11320,22 @@ __metadata:
     react-app-rewired: "npm:^2.2.1"
     react-dom: "npm:^18.2.0"
     react-scripts: "npm:^5.0.1"
+    react-virtuoso: "npm:^4.7.8"
     shx: "npm:^0.3.4"
     tailwindcss: "npm:^3.4.3"
     typescript: "npm:^5.4.5"
   languageName: unknown
   linkType: soft
+
+"react-virtuoso@npm:^4.7.8":
+  version: 4.7.8
+  resolution: "react-virtuoso@npm:4.7.8"
+  peerDependencies:
+    react: ">=16 || >=17 || >= 18"
+    react-dom: ">=16 || >=17 || >= 18"
+  checksum: 10c0/62bc722a8cade97a06b635f760641b9daae9ba55d7e7bef99b745ad520975a6c1f912243e3f0f1c7ed2fcca6eaf93dfc3faeb65abe63e56e621748ea3e44b0e2
+  languageName: node
+  linkType: hard
 
 "react@npm:^18.2.0":
   version: 18.2.0
