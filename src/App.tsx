@@ -14,6 +14,7 @@ declare function GM_getValue(name: string): any;
 declare function GM_setValue(name: string, value: any): void;
 
 export default function App() {
+  // let domain = 'http://localhost:12100/http://read.nlc.cn';
   let domain = 'http://read.nlc.cn';
   const [MAX_CONCURRENT_DOWNLOADS, setMAX_CONCURRENT_DOWNLOADS] = useState(4);
   const [rollList, setRollList] = useState([] as string[]);
@@ -65,7 +66,7 @@ export default function App() {
                 setDownloadCountCurrent(0);
                 async function downloadElement(aid: string, bid: string, index: number, workerId: number) {
                   currentDownloadsPercent[workerId] = 0;
-                  setDownloadProgress(currentDownloadsPercent);
+                  setDownloadProgress([...currentDownloadsPercent]);
                   let token_page = await (
                     await fetch(`${domain}/OutOpenBook/OpenObjectBook?aid=${aid}&bid=${bid}`, {
                       referrerPolicy: 'no-referrer',
@@ -96,7 +97,7 @@ export default function App() {
                             // console.log(progressEvent);
                             let percentCompleted = progressEvent.progress! * 100;
                             currentDownloadsPercent[workerId] = percentCompleted;
-                            setDownloadProgress(currentDownloadsPercent);
+                            setDownloadProgress([...currentDownloadsPercent]);
                           },
                         })
                         .then(res => {
@@ -137,7 +138,6 @@ export default function App() {
                 for (let i = 0; i < MAX_CONCURRENT_DOWNLOADS; i++) {
                   currentDownloadsPercent[i] = 0;
                 }
-                setDownloadProgress(currentDownloadsPercent);
                 for (const key in rollList) {
                   if (Object.prototype.hasOwnProperty.call(rollList, key)) {
                     const element = rollList[key];
