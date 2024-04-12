@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
+import { Snackbar, Fade } from '@mui/material';
 import App from './App';
 import Pdf from './Pdf';
 
@@ -24,18 +25,24 @@ function htmlDecode(text: string): string {
 }
 
 if (window.location.href.match(/\/(.*\.)?nlc\.cn/)) {
-  document.oncontextmenu = function (e) {
-    return true;
-  };
-  document.onkeydown =
-    document.onkeyup =
-    document.onkeypress =
-      function (e) {
-        return true;
-      };
-  document.onmousedown = function (e) {
-    return true;
-  };
+  foo();
+  setInterval(() => {
+    foo();
+  }, 1000);
+  function foo() {
+    document.oncontextmenu = function (e) {
+      return true;
+    };
+    document.onkeydown =
+      document.onkeyup =
+      document.onkeypress =
+        function (e) {
+          return true;
+        };
+    document.onmousedown = function (e) {
+      return true;
+    };
+  }
 }
 if (window.location.href.match(/\/allSearch\/searchDetail/)) {
   try {
@@ -70,6 +77,7 @@ if (window.location.href.match(/\/allSearch\/searchDetail/)) {
     console.error(e);
   }
   const callback = function (mutationsList: any[], observer: MutationObserver) {
+    document.querySelector('#multiple')?.classList.add('!block');
     document.querySelectorAll('a:not([class="hover:!text-blue-600"]').forEach(ele => {
       ele.classList.add('hover:!text-blue-600');
       ele.classList.add('!no-underline');
@@ -82,7 +90,30 @@ if (window.location.href.match(/\/allSearch\/searchDetail/)) {
   observer.observe(document.documentElement, { childList: true, subtree: true });
 }
 if (window.location.href.match(/\/OutOpenBook\/OpenObjectBook/)) {
+  if (typeof unsafeWindow != 'undefined') {
+    unsafeWindow.alert = function (...args: any[]) {
+      function handleClose() {
+        container.remove();
+      }
+      const body = document.body;
+      const container = document.createElement('div');
+      const root = createRoot(container);
+      root.render(
+        <Snackbar
+          open
+          onClose={handleClose}
+          message={args}
+          autoHideDuration={3000}
+          TransitionComponent={Fade}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        />
+      );
+      body?.appendChild(container);
+      return true;
+    };
+  }
   try {
+    // window.stop();
     document.body.innerHTML = '';
     document.documentElement.style.height = '100%';
     document.body.style.height = '100%';

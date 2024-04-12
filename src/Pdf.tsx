@@ -58,9 +58,13 @@ export default function Pdf() {
     let timeKey = token_page.match(/timeKey="([^"]*?)"/)![1];
     let timeFlag = token_page.match(/timeFlag="([^"]*?)"/)![1];
     let title = token_page.match(/var title = '(.*)';/)![1];
-    setTitle(title);
-    let index = token_page.match(/var pdfname= '.*_([0-9]+)\.pdf';/)![1];
-    setBookIndex(Number(index));
+    setTitle(title.trim());
+    try {
+      let index = token_page.match(/var pdfname= '.*_([0-9]+)\.pdf';/)![1];
+      setBookIndex(Number(index));
+    } catch (error: any) {
+      console.error(token_page.match(/var pdfname= '(.*?)\.pdf';/)![1], error.message);
+    }
     let config: fileConfigBlob = {
       url: `${domain}/menhu/OutOpenBook/getReader?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`,
       token: tokenKey,
@@ -72,7 +76,7 @@ export default function Pdf() {
     async function getArraybuffer(): Promise<[Blob, any]> {
       return new Promise(async (resolve, reject) => {
         axios
-          .get(process.env.NODE_ENV === 'development' ? '/0.pdf' : config.url, {
+          .get(config.url, {
             headers: {
               myreader: config.token,
             },
@@ -100,7 +104,7 @@ export default function Pdf() {
 
   return isLoading ? (
     <>
-      <div className='flex flex-col h-full'>
+      <div className='flex flex-col h-full bg-[#2A2A2E] text-white'>
         <LinearProgress
           ref={LoadingProgress}
           className='w-full !h-2 !bg-transparent'
@@ -127,7 +131,7 @@ export default function Pdf() {
             <Button
               variant='contained'
               onClick={() => {
-                downloadFile(config?.content!, bookIndex, title, 'pdf');
+                downloadFile(config?.content!, bookIndex, title, 'pdf', !(bookIndex === 0));
               }}
             >
               <DownloadIcon></DownloadIcon>
