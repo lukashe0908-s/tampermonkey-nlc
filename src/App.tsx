@@ -6,6 +6,7 @@ import { fileConfig, downloadFile } from './util';
 import { Download } from './Download';
 
 let stop = false;
+let forceStop = false;
 
 export default function App() {
   // let domain = 'http://localhost:12100/http://read.nlc.cn';
@@ -43,6 +44,11 @@ export default function App() {
       let html_parased = parser.parseFromString(html, 'text/html');
       let roll_list = [...html.matchAll(/"\/OutOpenBook\/OpenObjectBook\?aid=([0-9]*?)&bid=([0-9.]*)/g)];
       roll_list = lodash.uniqWith(roll_list, lodash.isEqual);
+      roll_list = roll_list.map((value: any, index) => {
+        let foo = value;
+        foo[0] = index.toString();
+        return foo;
+      });
       setRollList(roll_list as unknown as string[]);
       setDownloadCountTotal(roll_list.length);
       setTitle(html_parased.querySelector('.Z_clearfix .title')?.innerHTML.trim()!);
@@ -65,156 +71,180 @@ export default function App() {
         <>
           <div className='flex gap-2 items-center'>
             <div className='flex flex-col pt-3 gap-4 w-full'>
-              <Button
-                variant='contained'
-                className='text-nowrap !rounded-lg'
-                disabled={!downloadFinished && stop}
-                onClick={async () => {
-                  if (!downloadFinished) {
-                    stop = true;
-                    return;
-                  }
-                  stop = false;
-                  setFileList([]);
-                  setDownloadFinished(false);
-                  setDownloadCountCurrent(0);
-                  if (downloadCountTotalSelectedCount === 0) {
-                    setDownloadFinished(true);
-                    return;
-                  }
-                  async function downloadElement(aid: string, bid: string, index: number, workerId: number) {
-                    currentDownloadsPercent[workerId] = 0;
-                    setDownloadProgress([...currentDownloadsPercent]);
-                    let token_page = await (
-                      await fetch(`${domain}/OutOpenBook/OpenObjectBook?aid=${aid}&bid=${bid}`, {
-                        referrerPolicy: 'no-referrer',
-                      })
-                    ).text();
-                    let tokenKey = token_page.match(/tokenKey="([^"]*?)"/)![1];
-                    let timeKey = token_page.match(/timeKey="([^"]*?)"/)![1];
-                    let timeFlag = token_page.match(/timeFlag="([^"]*?)"/)![1];
-                    let config = {
-                      index: index,
-                      url: `${domain}/menhu/OutOpenBook/getReader?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`,
-                      token: tokenKey,
-                      content: undefined as unknown as Blob,
-                      size: 0,
-                    };
+              <div className='flex gap-1'>
+                <Button
+                  variant='contained'
+                  className='text-nowrap !rounded-lg w-full'
+                  disabled={!downloadFinished && stop}
+                  onClick={async () => {
+                    if (!downloadFinished) {
+                      stop = true;
+                      return;
+                    }
+                    stop = false;
+                    forceStop = false;
+                    setFileList([]);
+                    setDownloadFinished(false);
+                    setDownloadCountCurrent(0);
+                    if (downloadCountTotalSelectedCount === 0) {
+                      setDownloadFinished(true);
+                      return;
+                    }
+                    async function downloadElement(aid: string, bid: string, index: number, workerId: number) {
+                      currentDownloadsPercent[workerId] = 0;
+                      setDownloadProgress([...currentDownloadsPercent]);
+                      let token_page = await (
+                        await fetch(`${domain}/OutOpenBook/OpenObjectBook?aid=${aid}&bid=${bid}`, {
+                          referrerPolicy: 'no-referrer',
+                        })
+                      ).text();
+                      let tokenKey = token_page.match(/tokenKey="([^"]*?)"/)![1];
+                      let timeKey = token_page.match(/timeKey="([^"]*?)"/)![1];
+                      let timeFlag = token_page.match(/timeFlag="([^"]*?)"/)![1];
+                      let config = {
+                        index: index,
+                        url: `${domain}/menhu/OutOpenBook/getReader?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`,
+                        token: tokenKey,
+                        content: undefined as unknown as Blob,
+                        size: 0,
+                      };
 
-                    let content = await getBlob();
-                    async function getBlob(): Promise<Blob> {
-                      return new Promise(async (resolve, reject) => {
-                        axios
-                          .get(config.url, {
-                            headers: {
-                              myreader: config.token,
-                              // Referer: 'http://read.nlc.cn/static/webpdf/lib/WebPDFJRWorker.js',
-                            },
-                            responseType: 'blob',
-                            onDownloadProgress: progressEvent => {
-                              // console.log(progressEvent);
-                              let percentCompleted = progressEvent.progress! * 100;
-                              currentDownloadsPercent[workerId] = percentCompleted;
-                              setDownloadProgress([...currentDownloadsPercent]);
-                            },
-                          })
-                          .then(res => {
-                            const { data, headers } = res;
-                            const blob = new Blob([data], { type: headers['content-type'] });
-                            resolve(blob);
-                          })
-                          .catch(e => {
-                            reject(e);
-                          });
+                      let content = await getBlob();
+                      async function getBlob(): Promise<Blob> {
+                        return new Promise(async (resolve, reject) => {
+                          const controller = new AbortController();
+                          const interval = setInterval(() => {
+                            if (forceStop) controller.abort();
+                          }, 10);
+                          axios
+                            .get(config.url, {
+                              headers: {
+                                myreader: config.token,
+                                // Referer: 'http://read.nlc.cn/static/webpdf/lib/WebPDFJRWorker.js',
+                              },
+                              responseType: 'blob',
+                              onDownloadProgress: progressEvent => {
+                                // console.log(progressEvent);
+                                let percentCompleted = progressEvent.progress! * 100;
+                                currentDownloadsPercent[workerId] = percentCompleted;
+                                setDownloadProgress([...currentDownloadsPercent]);
+                              },
+                              signal: controller.signal,
+                            })
+                            .then(res => {
+                              const { data, headers } = res;
+                              const blob = new Blob([data], { type: headers['content-type'] });
+                              resolve(blob);
+                            })
+                            .catch(e => {
+                              reject(e);
+                            })
+                            .finally(() => {
+                              clearInterval(interval);
+                            });
+                        });
+                      }
+                      if (content.size === 0) throw new Error(`下载失败,返回空 (index: ${index}) (workerId: ${workerId})`);
+                      config.size = content.size;
+                      if (downloadOptionSelected === 0 || downloadOptionSelected === 1) {
+                        config.content = content;
+                      }
+                      if (downloadOptionSelected === 1 || downloadOptionSelected === 2) {
+                        downloadFile(content, index, title, 'pdf', !(downloadCountTotal === 1), downloadCountTotal_length);
+                      }
+                      return config;
+                    }
+                    async function waitForDownloadCompletion(index: number) {
+                      return new Promise(resolve => {
+                        const checkCompletion = setInterval(() => {
+                          if (currentDownloads < MAX_CONCURRENT_DOWNLOADS && temp_downloaded + MAX_CONCURRENT_DOWNLOADS > index) {
+                            clearInterval(checkCompletion);
+                            resolve(undefined);
+                          }
+                        }, 10);
                       });
                     }
-                    if (content.size === 0) throw new Error(`下载失败,返回空 (index: ${index}) (workerId: ${workerId})`);
-                    config.size = content.size;
-                    if (downloadOptionSelected === 0 || downloadOptionSelected === 1) {
-                      config.content = content;
-                    }
-                    if (downloadOptionSelected === 1 || downloadOptionSelected === 2) {
-                      downloadFile(content, index, title, 'pdf', !(downloadCountTotal === 1), downloadCountTotal_length);
-                    }
-                    return config;
-                  }
-                  async function waitForDownloadCompletion(index: number) {
-                    return new Promise(resolve => {
-                      const checkCompletion = setInterval(() => {
-                        if (currentDownloads < MAX_CONCURRENT_DOWNLOADS && temp_downloaded + MAX_CONCURRENT_DOWNLOADS > index) {
-                          clearInterval(checkCompletion);
-                          resolve(undefined);
-                        }
-                      }, 10);
-                    });
-                  }
 
-                  let temp_array: any[] = [];
-                  let temp_download = 0;
-                  let temp_downloaded = 0;
-                  let currentDownloads = 0;
-                  let currentDownloadsPercent: number[] = [];
-                  let downloadsList: any = {};
-                  for (let i = 0; i < MAX_CONCURRENT_DOWNLOADS; i++) {
-                    downloadsList[i] = false;
-                  }
-                  for (let i = 0; i < MAX_CONCURRENT_DOWNLOADS; i++) {
-                    currentDownloadsPercent[i] = 0;
-                  }
-                  let rollList_filter = rollList.filter((value, index) => {
-                    if (
-                      index >= Math.max(downloadCountTotalSelected[0], 1) - 1 &&
-                      index <= Math.max(downloadCountTotalSelected[1], 1) - 1
-                    ) {
-                      return true;
+                    let temp_array: any[] = [];
+                    let temp_download = 0;
+                    let temp_downloaded = 0;
+                    let currentDownloads = 0;
+                    let currentDownloadsPercent: number[] = [];
+                    let downloadsList: any = {};
+                    for (let i = 0; i < MAX_CONCURRENT_DOWNLOADS; i++) {
+                      downloadsList[i] = false;
                     }
-                    return false;
-                  });
-                  for (const key in rollList_filter) {
-                    if (Object.prototype.hasOwnProperty.call(rollList_filter, key)) {
-                      let index = Number(key);
-                      const element = rollList_filter[key];
-                      let aid = element[1];
-                      let bid = element[2];
-                      // 控制同时下载的数量
-                      // eslint-disable-next-line no-loop-func
-                      (async () => {
-                        if (currentDownloads >= MAX_CONCURRENT_DOWNLOADS) await waitForDownloadCompletion(index);
-                        if (stop) return;
-                        currentDownloads++;
-                        const workerId = lodash.findKey(downloadsList, function (o) {
-                          return o === false;
-                        })!;
-                        downloadsList[workerId] = true;
-                        await tryD();
-                        async function tryD() {
-                          try {
-                            temp_download = Math.max(temp_download, index + 1);
-                            let config = await downloadElement(aid, bid, index, Number(workerId));
-                            temp_array.push(config);
-                            temp_array = lodash.sortBy(temp_array, ['index']);
-                            setFileList(temp_array);
-                            currentDownloads--;
-                            downloadsList[workerId] = false;
-                            setDownloadCountCurrent(++temp_downloaded);
-                            temp_downloaded >= downloadCountTotalSelectedCount && setDownloadFinished(true);
-                            if (stop && temp_downloaded >= temp_download) {
-                              setDownloadFinished(true);
+                    for (let i = 0; i < MAX_CONCURRENT_DOWNLOADS; i++) {
+                      currentDownloadsPercent[i] = 0;
+                    }
+                    let rollList_filter = rollList.filter((value, index) => {
+                      if (
+                        index >= Math.max(downloadCountTotalSelected[0], 1) - 1 &&
+                        index <= Math.max(downloadCountTotalSelected[1], 1) - 1
+                      ) {
+                        return true;
+                      }
+                      return false;
+                    });
+                    for (const key in rollList_filter) {
+                      if (Object.prototype.hasOwnProperty.call(rollList_filter, key)) {
+                        let relative_index = Number(key);
+                        const element = rollList_filter[key];
+                        let index = element[0];
+                        let aid = element[1];
+                        let bid = element[2];
+                        // 控制同时下载的数量
+                        // eslint-disable-next-line no-loop-func
+                        (async () => {
+                          if (currentDownloads >= MAX_CONCURRENT_DOWNLOADS) await waitForDownloadCompletion(relative_index);
+                          if (stop) return;
+                          currentDownloads++;
+                          const workerId = lodash.findKey(downloadsList, function (o) {
+                            return o === false;
+                          })!;
+                          downloadsList[workerId] = true;
+                          temp_download = Math.max(temp_download, relative_index + 1);
+                          await tryD();
+                          async function tryD() {
+                            if (forceStop) return;
+                            try {
+                              let config = await downloadElement(aid, bid, Number(index), Number(workerId));
+                              temp_array.push(config);
+                              temp_array = lodash.sortBy(temp_array, ['index']);
+                              setFileList(temp_array);
+                              currentDownloads--;
+                              downloadsList[workerId] = false;
+                              setDownloadCountCurrent(++temp_downloaded);
+                              temp_downloaded >= downloadCountTotalSelectedCount && setDownloadFinished(true);
+                              if (stop && temp_downloaded >= temp_download) {
+                                setDownloadFinished(true);
+                              }
+                            } catch (error) {
+                              // console.error('下载出错:', error);
+                              await tryD();
+                            } finally {
                             }
-                          } catch (error) {
-                            // console.error('下载出错:', error);
-                            await tryD();
-                          } finally {
                           }
-                        }
-                      })();
+                        })();
+                      }
                     }
-                  }
-                }}
-              >
-                {downloadFinished ? '下载' : '停止'}
-              </Button>
-              <div className='px-4'>
+                  }}
+                >
+                  {downloadFinished ? '下载' : '停止'}
+                </Button>
+                <Button
+                  variant='contained'
+                  className='text-nowrap !rounded-lg'
+                  onClick={async () => {
+                    stop = true;
+                    forceStop = true;
+                    setDownloadFinished(true);
+                  }}
+                >
+                  强制停止
+                </Button>
+              </div>
+              <div className='px-2'>
                 <Slider
                   min={1}
                   max={downloadCountTotal}

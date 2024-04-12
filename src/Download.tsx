@@ -65,7 +65,8 @@ export function Download({
             (async () => {
               for (let index = 0; index < fileList.length; index++) {
                 const element = fileList[index];
-                downloadFile(element.content, element.index, title, 'pdf', !(downloadCountTotal === 1), downloadCountTotal_length);
+                element.content &&
+                  downloadFile(element.content, element.index, title, 'pdf', !(downloadCountTotal === 1), downloadCountTotal_length);
                 await (async () => {
                   return new Promise(resolve => {
                     setTimeout(() => {
@@ -115,14 +116,15 @@ export function Download({
                   className='border-blue-400 cursor-pointer !rounded-lg w-full flex-col'
                   variant='outlined'
                   onClick={() => {
-                    downloadFile(
-                      fileList[index].content,
-                      fileList[index].index,
-                      title,
-                      'pdf',
-                      !(downloadCountTotal === 1),
-                      downloadCountTotal_length
-                    );
+                    fileList[index].content &&
+                      downloadFile(
+                        fileList[index].content,
+                        fileList[index].index,
+                        title,
+                        'pdf',
+                        !(downloadCountTotal === 1),
+                        downloadCountTotal_length
+                      );
                   }}
                 >
                   <div className='normal-case break-all'>{title}</div>
