@@ -18,7 +18,7 @@
     "react-virtuoso": "^4.7.8"
   },
   "scripts": {
-    "start": "cross-env PORT=3000 BROWSER=none FAST_REFRESH=false WDS_SOCKET_HOST=localhost react-app-rewired start",
+    "start": "node devProxy & cross-env PORT=3000 BROWSER=none FAST_REFRESH=false WDS_SOCKET_HOST=localhost react-app-rewired start",
     "finalize": "shx mkdir -p ./dist && shx cp src/userscript-header.js ./dist/react-userscripts.user.js && shx cat build/static/js/main.js >> ./dist/react-userscripts.user.js",
     "build": "react-app-rewired build && npm run finalize",
     "debug-build": "react-app-rewired --inspect-brk=5858 build && npm run finalize",
@@ -41,9 +41,13 @@
     ]
   },
   "devDependencies": {
+    "@types/compression": "^1",
+    "@types/express": "^4",
     "@types/lodash": "^4",
     "autoprefixer": "^10.4.19",
+    "compression": "^1.7.4",
     "cross-env": "^7.0.3",
+    "express": "^4.19.2",
     "postcss": "^8.4.38",
     "shx": "^0.3.4",
     "tailwindcss": "^3.4.3",
