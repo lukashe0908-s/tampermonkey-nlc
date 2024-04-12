@@ -5,7 +5,7 @@ import lodash from 'lodash';
 import { fileConfig, downloadFile } from './util';
 import { Download } from './Download';
 
-let stop = false;
+let stop = true;
 let forceStop = false;
 
 export default function App() {
@@ -218,6 +218,7 @@ export default function App() {
                               temp_downloaded >= downloadCountTotalSelectedCount && setDownloadFinished(true);
                               if (stop && temp_downloaded >= temp_download) {
                                 setDownloadFinished(true);
+                                stop = true;
                               }
                             } catch (error) {
                               // console.error('下载出错:', error);
