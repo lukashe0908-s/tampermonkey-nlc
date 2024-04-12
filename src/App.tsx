@@ -9,7 +9,6 @@ let stop = true;
 let forceStop = false;
 
 export default function App() {
-  // let domain = 'http://localhost:12100/http://read.nlc.cn';
   let domain = `${process.env.NODE_ENV === 'development' ? 'http://localhost:12100/' : ''}http://read.nlc.cn`;
   const [MAX_CONCURRENT_DOWNLOADS, setMAX_CONCURRENT_DOWNLOADS] = useState(4);
   const [rollList, setRollList] = useState<string[]>([]);
@@ -25,10 +24,15 @@ export default function App() {
   }, [downloadCountTotal]);
   const [downloadCountTotalSelected, setDownloadCountTotalSelected] = useState<number[]>([]);
   const downloadCountTotalSelectedCount = useMemo(() => {
+    if (downloadCountTotal === 0) return 0;
     return Math.max(downloadCountTotalSelected[1], 1) - Math.max(downloadCountTotalSelected[0], 1) + 1;
-  }, [downloadCountTotalSelected]);
+  }, [downloadCountTotalSelected, downloadCountTotal]);
   const [downloadOptionSelected, setDownloadOptionSelected] = useState(0);
   useEffect(() => {
+    if (downloadCountTotal === 0) {
+      setDownloadCountTotalSelected([0, 0]);
+      return;
+    }
     setDownloadCountTotalSelected([1, downloadCountTotal]);
   }, [downloadCountTotal]);
   useEffect(() => {
@@ -42,7 +46,7 @@ export default function App() {
       ).text();
       let parser = new DOMParser();
       let html_parased = parser.parseFromString(html, 'text/html');
-      let roll_list = [...html.matchAll(/"\/OutOpenBook\/OpenObjectBook\?aid=([0-9]*?)&bid=([0-9.]*)/g)];
+      let roll_list = [...html.matchAll(/\/OutOpenBook\/OpenObjectBook\?aid=([0-9]*?)&bid=([0-9.]*)/g)];
       roll_list = lodash.uniqWith(roll_list, lodash.isEqual);
       roll_list = roll_list.map((value: any, index) => {
         let foo = value;
@@ -67,6 +71,12 @@ export default function App() {
     <div className='px-1 py-4 flex flex-col gap-4 !text-[16px]'>
       {loading ? (
         <Skeleton animation='wave' className='!h-[35em] !transform-none !rounded-[1em]' />
+      ) : downloadCountTotal === 0 ? (
+        <div className='flex justify-center'>
+          <div className={`!rounded-lg border-2 border-red-400 border-dashed transition-all text-4xl font-bold text-center p-4`}>
+            未找到链接
+          </div>
+        </div>
       ) : (
         <>
           <div className='flex gap-2 items-center'>
@@ -150,7 +160,7 @@ export default function App() {
                         config.content = content;
                       }
                       if (downloadOptionSelected === 1 || downloadOptionSelected === 2) {
-                        downloadFile(content, index, title, 'pdf', !(downloadCountTotal === 1), downloadCountTotal_length);
+                        downloadFile(content, index + 1, title, 'pdf', !(downloadCountTotal === 1), downloadCountTotal_length);
                       }
                       return config;
                     }

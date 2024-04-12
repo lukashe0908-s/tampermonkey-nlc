@@ -66,7 +66,7 @@ export function Download({
               for (let index = 0; index < fileList.length; index++) {
                 const element = fileList[index];
                 element.content &&
-                  downloadFile(element.content, element.index, title, 'pdf', !(downloadCountTotal === 1), downloadCountTotal_length);
+                  downloadFile(element.content, element.index + 1, title, 'pdf', !(downloadCountTotal === 1), downloadCountTotal_length);
                 await (async () => {
                   return new Promise(resolve => {
                     setTimeout(() => {
@@ -119,7 +119,7 @@ export function Download({
                     fileList[index].content &&
                       downloadFile(
                         fileList[index].content,
-                        fileList[index].index,
+                        fileList[index].index + 1,
                         title,
                         'pdf',
                         !(downloadCountTotal === 1),

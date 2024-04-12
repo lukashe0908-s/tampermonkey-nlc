@@ -1,16 +1,22 @@
-export interface fileConfig {
-  index: number;
+export interface fileConfigTemple {
   url: string;
   token: string;
-  content: Blob;
+  content: any;
   size: number;
+}
+export interface fileConfig extends fileConfigTemple {
+  index: number;
+  content: Blob;
+}
+export interface fileConfigBlob extends fileConfigTemple {
+  content: Blob;
 }
 
 export function downloadFile(content: Blob, index: number, title: string, fileExtra: string, useIndex: boolean = true, padTo: number = 4) {
   let object_ = URL.createObjectURL(content);
   const ele = document.createElement('a');
   ele.href = object_;
-  ele.download = `${title}${useIndex ? '/' + (index + 1).toString().padStart(padTo, '0') : ''}.${fileExtra}`;
+  ele.download = `${title}${useIndex ? '/' + index.toString().padStart(padTo, '0') : ''}.${fileExtra}`;
   ele.click();
   // window.URL.revokeObjectURL(object_);
 }

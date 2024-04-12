@@ -2,42 +2,96 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
+import Pdf from './Pdf';
 
-// Do required initial work. Gets called every time the URL changes,
-// so that elements can be re-inserted as a user navigates a page with
-// different routes.
 async function main() {
   if (window.location.href.match(/\/allSearch\/searchDetail/)) {
-    const body = document.querySelector('.SZZY2018_Book')?.parentElement || document.querySelector('.GYYD2019_Book')?.parentElement;
+    const body =
+      document.querySelector('.SZZY2018_Book')?.parentElement || document.querySelector('.GYYD2019_Book')?.parentElement || document.body;
     const container = document.createElement('div');
     const root = createRoot(container);
     root.render(<App />);
     body?.appendChild(container);
   }
 }
+main();
 
-// Call `main()` every time the page URL changes, including on first load.
-addLocationChangeCallback(() => {
-  // Greasemonkey doesn't bubble errors up to the main console,
-  // so we have to catch them manually and log them
-  main().catch(e => {
+function htmlDecode(text: string): string {
+  let tempDiv = document.createElement('div');
+  tempDiv.innerHTML = text;
+  let output = tempDiv.textContent as string;
+  return output;
+}
+
+if (window.location.href.match(/\/(.*\.)?nlc\.cn/)) {
+  document.oncontextmenu = function (e) {
+    return true;
+  };
+  document.onkeydown =
+    document.onkeyup =
+    document.onkeypress =
+      function (e) {
+        return true;
+      };
+  document.onmousedown = function (e) {
+    return true;
+  };
+}
+if (window.location.href.match(/\/allSearch\/searchDetail/)) {
+  try {
+    let script = document.createElement('script');
+    script.src = 'https://cdn.tailwindcss.com/3.4.3';
+    document.documentElement.appendChild(script);
+    document.body.classList.add('transition-all');
+    document.querySelector('.FenXiang')?.remove();
+    document.querySelector('.YMH2019_New_Book_Main')?.classList.add('rounded-2xl');
+    document.querySelector('.XiangXi')?.classList.add('rounded-2xl');
+    document.querySelectorAll('.ul2 > li').forEach(ele => {
+      ele.classList.add('!bg-white');
+      ele.classList.add('rounded-md');
+      ele.classList.add('py-1');
+      ele.classList.add('transition-all');
+      ele.classList.add('hover:!bg-gray-100');
+      let url = ele.innerHTML.match(/href="([^"]*)"/)![1]!;
+      url = htmlDecode(url);
+      if (ele.querySelector('.aa')) {
+        (ele.querySelector('.aa')! as HTMLLinkElement).href = url;
+        (ele.querySelector('.aa')! as HTMLLinkElement).target = '_blank';
+      }
+      ele.querySelector('.aa')?.classList.add('hover:!text-blue-600');
+      ele.querySelector('.aa')?.classList.add('!pr-8');
+      ele.querySelector('.aa')?.classList.add('!mr-0');
+      ele.querySelector('.a1')?.remove();
+      ele.querySelector('.a2')?.classList.add('rounded-sm');
+      ele.querySelector('.a2')?.classList.add('hover:!text-white');
+    });
+    document.querySelector('.YMH2019_New_ft')?.remove();
+  } catch (e) {
     console.error(e);
-  });
-});
-export function addLocationChangeCallback(callback: any) {
-  // Run the callback once right at the start
-  window.setTimeout(callback, 0);
-
-  // Set up a `MutationObserver` to watch for changes in the URL
-  let oldHref = window.location.href;
-  const body = document.querySelector('body') as HTMLElement;
-  const observer = new MutationObserver(mutations => {
-    if (mutations.some(() => oldHref !== document.location.href)) {
-      oldHref = document.location.href;
-      callback();
-    }
-  });
-
-  observer.observe(body, { childList: true, subtree: true });
-  return observer;
+  }
+  const callback = function (mutationsList: any[], observer: MutationObserver) {
+    document.querySelectorAll('a:not([class="hover:!text-blue-600"]').forEach(ele => {
+      ele.classList.add('hover:!text-blue-600');
+      ele.classList.add('!no-underline');
+    });
+    document.querySelectorAll('.pic:not([class="!rounded-lg"]),.pic:not([class="!rounded-lg"]) *').forEach(ele => {
+      ele.classList.add('!rounded-lg');
+    });
+  };
+  const observer = new MutationObserver(callback);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+}
+if (window.location.href.match(/\/OutOpenBook\/OpenObjectBook/)) {
+  try {
+    document.body.innerHTML = '';
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
+    const container = document.createElement('div');
+    container.style.height = '100%';
+    const root = createRoot(container);
+    root.render(<Pdf />);
+    document.body.appendChild(container);
+  } catch (e) {
+    console.error(e);
+  }
 }

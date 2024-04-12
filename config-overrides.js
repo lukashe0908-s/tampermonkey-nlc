@@ -1,6 +1,6 @@
 const path = require('path');
 module.exports = function override(config, env) {
-  //   console.log(config);
+  // console.log(config);
 
   // Even in production mode, we want the CSS inlined instead of put in a different file
   // Remove the CSS extract plugin because we want CSS injected directly in
@@ -17,8 +17,8 @@ module.exports = function override(config, env) {
       }
     }
   });
-
-  return { ...config, output: { path: path.resolve(process.cwd(), 'build'), filename: 'static/js/main.js' } };
+  Object.assign(config.output, { path: path.resolve(process.cwd(), 'build'), filename: 'static/js/[name].js' });
+  return config;
 };
 // module.exports = function override(config, env) {
 //     // prevent chunking for all files
