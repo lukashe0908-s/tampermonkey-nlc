@@ -83,7 +83,6 @@ async function main() {
   }
   if (window.location.href.match(/\/OutOpenBook\/OpenObjectBook/)) {
     try {
-      unsafeWindow.$ = undefined;
       document.body.innerHTML = '';
       document.documentElement.style.height = '100%';
       document.body.style.height = '100%';
@@ -92,6 +91,10 @@ async function main() {
       const root = createRoot(container);
       root.render(<Pdf />);
       document.body.appendChild(container);
+      if (typeof unsafeWindow != 'undefined') {
+        unsafeWindow.$ = undefined;
+        unsafeWindow.event = { keyCode: -114 };
+      }
     } catch (e) {
       console.error(e);
     }
