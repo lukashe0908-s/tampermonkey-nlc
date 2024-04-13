@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, LinearProgress } from '@mui/material';
+import { Button, LinearProgress, Checkbox, FormGroup, FormControlLabel } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { formatFileSize, fileConfigBlob, downloadFile } from './util';
 import axios from 'axios';
 import lodash from 'lodash';
-import { pdfjs, Document, Page } from 'react-pdf';
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface configFromUri {
   aid?: string;
@@ -16,6 +14,7 @@ export default function Pdf() {
   let domain = `${process.env.NODE_ENV === 'development' ? 'http://localhost:12100/' : ''}http://read.nlc.cn`;
   const [configId, setConfigId] = useState<configFromUri>({});
   const [isLoading, setLoading] = useState(true);
+  const [useOrigin, setUseOrigin] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [title, setTitle] = useState('');
   const [bookIndex, setBookIndex] = useState(0);
@@ -38,6 +37,7 @@ export default function Pdf() {
       setFilesize(config.size);
       setLoading(false);
     })();
+    if (typeof GM_getValue === 'function' && GM_getValue('useOrigin')!) setUseOrigin(GM_getValue('useOrigin')!);
   }, []);
   useEffect(() => {
     const ele = (LoadingProgress.current as HTMLElement | undefined)?.childNodes[0] as HTMLElement;
@@ -122,12 +122,25 @@ export default function Pdf() {
         <div className='sticky flex gap-4 p-2 bg-[#745399] z-[100] top-0 text-white'>
           <div className='flex gap-4 w-full items-center'>
             <h1 className='text-xl'>{title}</h1>
-            <div className='normal-case flex gap-2 text-white'>
+            <div className='normal-case flex gap-2 text-white flex-wrap'>
               <div className='px-1 rounded-md bg-blue-600'>{bookIndex.toString().padStart(4, '0')}</div>
               <div className='px-1 rounded-md bg-cyan-600'>{formatFileSize(fileSize)}</div>
             </div>
           </div>
-          <div className='float-right'>
+          <div className='float-right flex items-center'>
+            <FormControlLabel
+              className='select-none text-nowrap'
+              control={
+                <Checkbox
+                  checked={useOrigin}
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                    setUseOrigin(event.target.checked);
+                    if (typeof GM_setValue === 'function') GM_setValue('useOrigin', event.target.checked);
+                  }}
+                />
+              }
+              label='原生'
+            />
             <Button
               variant='contained'
               onClick={() => {
@@ -138,12 +151,24 @@ export default function Pdf() {
             </Button>
           </div>
         </div>
-        <PdfContent content={config!.content} className=''></PdfContent>
+        {useOrigin ? <PdfContentOrigin content={config!.content}></PdfContentOrigin> : <PdfContent content={config!.content}></PdfContent>}
       </div>
     </>
   );
 }
 function PdfContent({ content, className }: { content: Blob; className?: string }) {
+  const [url, setUrl] = useState<string>('');
+  useEffect(() => {
+    setUrl(URL.createObjectURL(content));
+  }, [content]);
+  return (
+    <div className={'h-full ' + className}>
+      {url ? <iframe src={'/pdfReader/?file=' + url} frameBorder='0' className='w-full h-full bg-[#2A2A2E] text-white'></iframe> : ''}
+    </div>
+  );
+}
+
+function PdfContentOrigin({ content, className }: { content: Blob; className?: string }) {
   const [url, setUrl] = useState<string>('');
   useEffect(() => {
     setUrl(URL.createObjectURL(content));

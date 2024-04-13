@@ -17,6 +17,11 @@ module.exports = function override(config, env) {
       }
     }
   });
+  config.module.rules.push({
+    test: /\.mjs$/,
+    include: /node_modules/,
+    type: 'javascript/auto',
+  });
   Object.assign(config.output, { path: path.resolve(process.cwd(), 'build'), filename: 'static/js/[name].js' });
   return config;
 };
