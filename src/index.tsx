@@ -83,6 +83,7 @@ async function main() {
   }
   if (window.location.href.match(/\/OutOpenBook\/OpenObjectBook/)) {
     try {
+      unsafeWindow.$ = undefined;
       document.body.innerHTML = '';
       document.documentElement.style.height = '100%';
       document.body.style.height = '100%';
@@ -97,7 +98,6 @@ async function main() {
   }
 }
 document.addEventListener('DOMContentLoaded', () => {
-  console.log(window.location.href);
   main();
 });
 function htmlDecode(text: string): string {
@@ -128,7 +128,8 @@ function foo() {
 
 if (window.location.href.match(/\/OutOpenBook\/OpenObjectBook/)) {
   try {
-    window.stop();
+    // window.stop();
+    document.body.remove();
     let body = document.createElement('body');
     document.documentElement.appendChild(body);
   } catch (e) {
@@ -137,7 +138,7 @@ if (window.location.href.match(/\/OutOpenBook\/OpenObjectBook/)) {
 }
 if (window.location.href.match(/\/pdfReader\//)) {
   try {
-    window.stop();
+    // window.stop();
     document.documentElement.innerHTML = '';
     const container = document.documentElement;
     const root = createRoot(container);

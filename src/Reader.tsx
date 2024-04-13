@@ -5,15 +5,14 @@ export default function Reader() {
     let script = document.createElement('script');
     script.src = 'https://pdf.misee.dns.army/build/pdf.mjs';
     script.type = 'module';
-    document.head.appendChild(script);
-    setTimeout(() => {
+    script.addEventListener('load', () => {
       script = document.createElement('script');
       script.src = 'https://pdf.misee.dns.army/web/viewer.mjs';
       script.type = 'module';
-      script.defer = true;
       document.head.appendChild(script);
       setLoading(false);
-    }, 200);
+    });
+    document.head.appendChild(script);
   }, []);
 
   return (
