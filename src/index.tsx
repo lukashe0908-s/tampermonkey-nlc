@@ -2,7 +2,6 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import { Snackbar, Fade } from '@mui/material';
-import Reader from './Reader';
 import App from './App';
 import Pdf from './Pdf';
 
@@ -102,7 +101,9 @@ async function main() {
 }
 document.addEventListener('DOMContentLoaded', () => {
   main();
+  unsafeWindow.DisableDevtool.isSuspend = true;
 });
+
 function htmlDecode(text: string): string {
   let tempDiv = document.createElement('div');
   tempDiv.innerHTML = text;
@@ -143,9 +144,19 @@ if (window.location.href.match(/\/pdfReader\//)) {
   try {
     // window.stop();
     document.documentElement.innerHTML = '';
-    const container = document.documentElement;
-    const root = createRoot(container);
-    root.render(<Reader></Reader>);
+
+    const pdfjs_html = require('./pdf-js.html');
+    document.documentElement.innerHTML = pdfjs_html.default;
+    let script = document.createElement('script');
+    script.src = 'https://mozilla.github.io/pdf.js/build/pdf.mjs';
+    script.type = 'module';
+    script.addEventListener('load', () => {
+      script = document.createElement('script');
+      script.src = 'https://mozilla.github.io/pdf.js/web/viewer.mjs';
+      script.type = 'module';
+      document.head.appendChild(script);
+    });
+    document.head.appendChild(script);
   } catch (e) {
     console.error(e);
   }

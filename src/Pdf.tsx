@@ -20,7 +20,7 @@ export default function Pdf() {
   const [bookIndex, setBookIndex] = useState(0);
   const [config, setConfig] = useState<fileConfigBlob>();
   const [fileSize, setFilesize] = useState(0);
-  const LoadingProgress = useRef();
+  const LoadingProgress = useRef(0);
 
   useEffect(() => {
     const foo = window.location.href.match(/\/OutOpenBook\/OpenObjectBook\?aid=([0-9]*?)&bid=([0-9.]*)/);
@@ -40,7 +40,7 @@ export default function Pdf() {
     if (typeof GM_getValue === 'function' && GM_getValue('useOrigin')!) setUseOrigin(GM_getValue('useOrigin')!);
   }, []);
   useEffect(() => {
-    const ele = (LoadingProgress.current as HTMLElement | undefined)?.childNodes[0] as HTMLElement;
+    const ele = (LoadingProgress.current as any)?.childNodes[0] as HTMLElement;
     ele.style.backgroundColor = '#745399';
   }, [LoadingProgress]);
   useEffect(() => {
@@ -51,6 +51,7 @@ export default function Pdf() {
     setDownloadProgress(0);
     let token_page = await (
       await fetch(`${domain}/OutOpenBook/OpenObjectBook?aid=${aid}&bid=${bid}`, {
+        cache: 'no-cache',
         referrerPolicy: 'no-referrer',
       })
     ).text();
@@ -66,7 +67,7 @@ export default function Pdf() {
       console.error(token_page.match(/var pdfname= '(.*?)\.pdf';/)![1], error.message);
     }
     let config: fileConfigBlob = {
-      url: `${domain}/menhu/OutOpenBook/getReader?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`,
+      url: `${domain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`,
       token: tokenKey,
       content: undefined as unknown as Blob,
       size: 0,
@@ -75,25 +76,35 @@ export default function Pdf() {
     let content = await getArraybuffer();
     async function getArraybuffer(): Promise<[Blob, any]> {
       return new Promise(async (resolve, reject) => {
-        axios
-          .get(config.url, {
-            headers: {
-              myreader: config.token,
-            },
-            responseType: 'blob',
-            onDownloadProgress: progressEvent => {
-              let percentCompleted = progressEvent.progress! * 100;
-              setDownloadProgress(percentCompleted);
-            },
-          })
-          .then(res => {
-            const { data, headers } = res;
-            const blob = new Blob([data], { type: 'application/pdf' });
-            resolve([blob, (headers as any).get('content-length')]);
-          })
-          .catch(e => {
-            reject(e);
-          });
+        let response = await fetch(`${domain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`, {
+          method: 'GET',
+          referrer: 'http://read.nlc.cn/static/webpdf/lib/WebPDFJRWorker.js',
+          headers: {
+            myreader: tokenKey,
+          },
+        });
+
+        const reader = response.body!.getReader();
+        const contentLength: any = response.headers.get('Content-Length');
+        let receivedLength = 0;
+        let chunks = [];
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          chunks.push(value);
+          receivedLength += value.length;
+
+          console.log(`Received ${receivedLength} of ${contentLength}`);
+          let percentCompleted = (receivedLength / contentLength) * 100;
+          setDownloadProgress(percentCompleted);
+        }
+
+        const data = new Blob(chunks, { type: 'application/pdf' });
+        resolve([data, contentLength]);
       });
     }
     if (content[1] === 0) throw new Error(`下载失败,返回空`);
@@ -109,8 +120,7 @@ export default function Pdf() {
           ref={LoadingProgress}
           className='w-full !h-2 !bg-transparent'
           variant='determinate'
-          value={downloadProgress}
-        ></LinearProgress>
+          value={downloadProgress}></LinearProgress>
         <div className='flex flex-col items-center justify-center h-full'>
           <span className='text-4xl font-bold'>加载中</span>
         </div>
@@ -145,8 +155,7 @@ export default function Pdf() {
               variant='contained'
               onClick={() => {
                 downloadFile(config?.content!, bookIndex, title, 'pdf', !(bookIndex === 0));
-              }}
-            >
+              }}>
               <DownloadIcon></DownloadIcon>
             </Button>
           </div>

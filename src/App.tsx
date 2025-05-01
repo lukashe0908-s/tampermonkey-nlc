@@ -105,6 +105,7 @@ export default function App() {
                       setDownloadProgress([...currentDownloadsPercent]);
                       let token_page = await (
                         await fetch(`${domain}/OutOpenBook/OpenObjectBook?aid=${aid}&bid=${bid}`, {
+                          cache: 'no-cache',
                           referrerPolicy: 'no-referrer',
                         })
                       ).text();
@@ -113,7 +114,7 @@ export default function App() {
                       let timeFlag = token_page.match(/timeFlag="([^"]*?)"/)![1];
                       let config = {
                         index: index,
-                        url: `${domain}/menhu/OutOpenBook/getReader?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`,
+                        url: `${domain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`,
                         token: tokenKey,
                         content: undefined as unknown as Blob,
                         size: 0,
@@ -126,32 +127,40 @@ export default function App() {
                           const interval = setInterval(() => {
                             if (forceStop) controller.abort();
                           }, 10);
-                          axios
-                            .get(config.url, {
+                          let response = await fetch(
+                            `${domain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`,
+                            {
+                              method: 'GET',
+                              referrer: 'http://read.nlc.cn/static/webpdf/lib/WebPDFJRWorker.js',
                               headers: {
-                                myreader: config.token,
-                                // Referer: 'http://read.nlc.cn/static/webpdf/lib/WebPDFJRWorker.js',
+                                myreader: tokenKey,
                               },
-                              responseType: 'blob',
-                              onDownloadProgress: progressEvent => {
-                                // console.log(progressEvent);
-                                let percentCompleted = progressEvent.progress! * 100;
-                                currentDownloadsPercent[workerId] = percentCompleted;
-                                setDownloadProgress([...currentDownloadsPercent]);
-                              },
-                              signal: controller.signal,
-                            })
-                            .then(res => {
-                              const { data, headers } = res;
-                              const blob = new Blob([data], { type: headers['content-type'] });
-                              resolve(blob);
-                            })
-                            .catch(e => {
-                              reject(e);
-                            })
-                            .finally(() => {
-                              clearInterval(interval);
-                            });
+                            }
+                          );
+
+                          const reader = response.body!.getReader();
+                          const contentLength: any = response.headers.get('Content-Length');
+                          let receivedLength = 0;
+                          let chunks = [];
+                          while (true) {
+                            const { done, value } = await reader.read();
+
+                            if (done) {
+                              break;
+                            }
+
+                            chunks.push(value);
+                            receivedLength += value.length;
+
+                            console.log(`Received ${receivedLength} of ${contentLength}`);
+                            let percentCompleted = (receivedLength / contentLength) * 100;
+                            currentDownloadsPercent[workerId] = percentCompleted;
+                            setDownloadProgress([...currentDownloadsPercent]);
+                          }
+
+                          const data = new Blob(chunks, { type: 'application/pdf' });
+                          resolve(data);
+                          clearInterval(interval);
                         });
                       }
                       if (content.size === 0) throw new Error(`下载失败,返回空 (index: ${index}) (workerId: ${workerId})`);
@@ -239,8 +248,7 @@ export default function App() {
                         })();
                       }
                     }
-                  }}
-                >
+                  }}>
                   {downloadFinished ? '下载' : '停止'}
                 </Button>
                 <Button
@@ -250,8 +258,7 @@ export default function App() {
                     stop = true;
                     forceStop = true;
                     setDownloadFinished(true);
-                  }}
-                >
+                  }}>
                   强制停止
                 </Button>
               </div>
@@ -326,8 +333,7 @@ export default function App() {
             downloadCountTotalSelected={downloadCountTotalSelectedCount}
             downloadFinished={downloadFinished}
             downloadOptionSelected={downloadOptionSelected}
-            setDownloadOptionSelected={setDownloadOptionSelected}
-          ></Download>
+            setDownloadOptionSelected={setDownloadOptionSelected}></Download>
         </>
       )}
     </div>

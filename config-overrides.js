@@ -22,6 +22,10 @@ module.exports = function override(config, env) {
     include: /node_modules/,
     type: 'javascript/auto',
   });
+  config.module.rules.push({
+    test: /\.html$/i,
+    loader: 'html-loader',
+  });
   Object.assign(config.output, { path: path.resolve(process.cwd(), 'build'), filename: 'static/js/[name].js' });
   return config;
 };
