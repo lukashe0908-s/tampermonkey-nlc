@@ -149,7 +149,7 @@ export default function Pdf() {
                   }}
                 />
               }
-              label='原生'
+              label='使用浏览器PDF阅读器'
             />
             <Button
               variant='contained'
