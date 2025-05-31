@@ -31,6 +31,7 @@ app.post("/api/v1/tasks", async (req, res) => {
 
     const filePath = path.join(folderPath, name);
     console.log(url, header);
+    res.json({ code: 0, file: filePath });
 
     const response = await axios.get(url, {
       headers: header,
@@ -42,16 +43,16 @@ app.post("/api/v1/tasks", async (req, res) => {
 
     writer.on("finish", () => {
       console.log(`✅ 下载完成：${filePath}`);
-      res.json({ code: 0, file: filePath });
+      // res.json({ code: 0, file: filePath });
     });
 
     writer.on("error", (err) => {
       console.error(`❌ 写入文件失败: ${err.message}`);
-      res.status(500).json({ code: "文件保存失败" });
+      // res.status(500).json({ code: "文件保存失败" });
     });
   } catch (err) {
     console.error(`❌ 下载失败: ${err.message}`);
-    res.status(500).json({ code: "下载失败", msg: err.message });
+    // res.status(500).json({ code: "下载失败", msg: err.message });
   }
 });
 app.use((req, res, next) => {

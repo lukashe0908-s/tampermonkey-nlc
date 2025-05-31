@@ -107,14 +107,6 @@ export default function Settings() {
         <a href='https://github.com/GopeedLab/gopeed/releases/latest' target='_blank' rel='noreferrer' className='text-blue-600'>
           Github
         </a>
-        <br />
-        <p>
-          提示：请使用{' '}
-          <a href='https://www.tampermonkey.net/index.php' target='_blank' rel='noreferrer' className='text-blue-600'>
-            Tampermonkey BETA
-          </a>{' '}
-          以确保能够正常下载
-        </p>
       </Card>
     </div>
   );
