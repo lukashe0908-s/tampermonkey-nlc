@@ -11,10 +11,10 @@ export default function Settings() {
 
   useEffect(() => {
     setFolderPath(getItemValue('gopeed/folderPath'));
-    setApiIP(getItemValue('gopeed/apiIP'));
-    setApiPort(getItemValue('gopeed/apiPort'));
+    setApiIP(getItemValue('gopeed/apiIP') || '127.0.0.1');
+    setApiPort(getItemValue('gopeed/apiPort') || '9999');
     setApiToken(getItemValue('gopeed/apiToken'));
-    setFolderStructure(getItemValue('gopeed/folderStructure'));
+    setFolderStructure(getItemValue('gopeed/folderStructure') || 'flat');
   }, []);
 
   function updateValue(key: string, value: string, setter: (v: string) => void) {

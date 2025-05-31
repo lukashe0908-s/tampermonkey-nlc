@@ -147,7 +147,7 @@ export default function App() {
       }
 
       setCurrentProgress(i - (downloadCountTotalSelected[0] - 2)); // 从 1 开始数
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 100));
     }
 
     setIsDownloading(false);
