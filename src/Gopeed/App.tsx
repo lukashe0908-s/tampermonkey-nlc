@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { Button, Skeleton, TextField, Slider } from '@mui/material';
 import lodash from 'lodash';
-import { getItemValue, setItemValue } from '../util';
+import { getItemValue, setItemValue, GM_ListCookie } from '../util';
 
 export default function App() {
   const domain = `${process.env.NODE_ENV === 'development' ? 'http://localhost:12100/' : ''}http://read.nlc.cn`;
@@ -56,12 +56,13 @@ export default function App() {
   }, [logList]);
 
   async function downloadSingle(aid: string, bid: string, index: number) {
-    let token_page = await (
-      await fetch(`${domain}/OutOpenBook/OpenObjectBook?aid=${aid}&bid=${bid}`, {
-        cache: 'no-cache',
-        referrerPolicy: 'no-referrer',
-      })
-    ).text();
+    let customCookie = getItemValue('gopeed/downloadCookie');
+
+    let token_page_req = await fetch(`${domain}/OutOpenBook/OpenObjectBook?aid=${aid}&bid=${bid}`, {
+      cache: 'no-cache',
+      referrerPolicy: 'no-referrer',
+    });
+    let token_page = await token_page_req.text();
     let tokenKey = token_page.match(/tokenKey="([^"]*?)"/)![1];
     let timeKey = token_page.match(/timeKey="([^"]*?)"/)![1];
     let timeFlag = token_page.match(/timeFlag="([^"]*?)"/)![1];
@@ -71,7 +72,7 @@ export default function App() {
     const url = `${domain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`;
 
     let apiIP = getItemValue('gopeed/apiIP') || '127.0.0.1';
-    const apiPort = getItemValue('gopeed/apiPort') || 9999;
+    const apiPort = getItemValue('gopeed/apiPort') || 31561;
     const apiToken = getItemValue('gopeed/apiToken') || '';
     let folderPath = getItemValue('gopeed/folderPath') || '';
     folderPath = folderPath.replace(/[\\/]+$/, ''); // 去除结尾的 / 或 \
@@ -94,6 +95,8 @@ export default function App() {
     }
     const apiURL = `http://${apiIP}:${apiPort}/api/v1/tasks`;
 
+    console.log(url, tokenKey);
+
     let callApiResult = await (
       await fetch(apiURL, {
         method: 'POST',
@@ -106,6 +109,8 @@ export default function App() {
             url,
             extra: {
               header: {
+                'User-Agent': navigator.userAgent,
+                ...(customCookie ? { Cookie: customCookie } : {}),
                 Referer: 'http://read.nlc.cn/static/webpdf/lib/WebPDFJRWorker.js',
                 myreader: tokenKey,
               },
@@ -116,6 +121,7 @@ export default function App() {
             ...(folderPath ? { path: folderPath } : {}),
             extra: {
               connections: 1,
+              autoTorrent: false,
             },
           },
         }),

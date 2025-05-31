@@ -67,3 +67,17 @@ export function setItemValue(key: string, value: any): void {
     localStorage.setItem('settings', JSON.stringify(settings));
   }
 }
+export async function GM_ListCookie(detail: any): Promise<any> {
+  if (typeof GM_cookie !== 'undefined') {
+    return new Promise((resolve, reject) => {
+      GM_cookie.list(detail, (cookies: { [key: string]: any }, error?: string) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(cookies);
+        }
+      });
+    });
+  }
+  return undefined;
+}

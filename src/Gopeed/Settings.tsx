@@ -6,6 +6,7 @@ export default function Settings() {
   const [folderPath, setFolderPath] = useState('');
   const [folderStructure, setFolderStructure] = useState('flat');
   const [downloadDelay, setDownloadDelay] = useState('300');
+  const [downloadCookie, setDownloadCookie] = useState('');
   const [apiIP, setApiIP] = useState('127.0.0.1');
   const [apiPort, setApiPort] = useState('9999');
   const [apiToken, setApiToken] = useState('');
@@ -13,10 +14,11 @@ export default function Settings() {
   useEffect(() => {
     setFolderPath(getItemValue('gopeed/folderPath'));
     setApiIP(getItemValue('gopeed/apiIP') || '127.0.0.1');
-    setApiPort(getItemValue('gopeed/apiPort') || '9999');
+    setApiPort(getItemValue('gopeed/apiPort') || '31561');
     setApiToken(getItemValue('gopeed/apiToken'));
     setFolderStructure(getItemValue('gopeed/folderStructure') || 'flat');
     setDownloadDelay(getItemValue('gopeed/downloadDelay') || '1000');
+    setDownloadCookie(getItemValue('gopeed/downloadCookie') || '');
   }, []);
 
   function updateValue(key: string, value: string, setter: (v: string) => void) {
@@ -58,6 +60,14 @@ export default function Settings() {
             onChange={e => updateValue('gopeed/downloadDelay', e.target.value, setDownloadDelay)}
             helperText='每次下载之间的等待时间'
           />
+          <TextField
+            label='自定义请求Cookie'
+            variant='standard'
+            className='w-[20em] max-w-full !mr-4'
+            value={downloadCookie}
+            onChange={e => updateValue('gopeed/downloadCookie', e.target.value, setDownloadCookie)}
+            helperText=''
+          />
         </div>
         <Divider></Divider>
         <div className='my-2'>
@@ -90,13 +100,21 @@ export default function Settings() {
       <Divider></Divider>
       <Card className='!rounded-lg p-3' elevation={0}>
         <p className='font-bold text-xl'>Gopeed下载</p>
-        <a href='https://gopeed.com/' className='text-blue-600'>
+        <a href='https://gopeed.com/' target='_blank' rel='noreferrer' className='text-blue-600'>
           官网
         </a>
         &ensp;&ensp;&ensp;&ensp;
-        <a href='https://github.com/GopeedLab/gopeed/releases/latest' className='text-blue-600'>
+        <a href='https://github.com/GopeedLab/gopeed/releases/latest' target='_blank' rel='noreferrer' className='text-blue-600'>
           Github
         </a>
+        <br />
+        <p>
+          提示：请使用{' '}
+          <a href='https://www.tampermonkey.net/index.php' target='_blank' rel='noreferrer' className='text-blue-600'>
+            Tampermonkey BETA
+          </a>{' '}
+          以确保能够正常下载
+        </p>
       </Card>
     </div>
   );
