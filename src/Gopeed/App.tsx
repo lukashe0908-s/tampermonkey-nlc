@@ -45,7 +45,11 @@ export default function App() {
       setRollList(rollList);
       setDownloadCountTotal(rollList.length);
       setDownloadCountTotalSelected([1, rollList.length]);
-      setTitle(htmlParsed.querySelector('.Z_clearfix .title')?.textContent?.trim() || '');
+      let title_pre =
+        (htmlParsed.querySelector('.Z_clearfix .title')?.textContent?.trim() || '') +
+        '_' +
+        window.location.search.match(/&fid=([0-9]*)/)![1];
+      setTitle(title_pre);
       setLoading(false);
     })();
   }, []);

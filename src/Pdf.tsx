@@ -13,7 +13,7 @@ export default function Pdf() {
   let domain = `${process.env.NODE_ENV === 'development' ? 'http://localhost:12100/' : ''}http://read.nlc.cn`;
   const [configId, setConfigId] = useState<configFromUri>({});
   const [isLoading, setLoading] = useState(true);
-  const [useOrigin, setUseOrigin] = useState(false);
+  const [notUseOrigin, setNotUseOrigin] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [title, setTitle] = useState('');
   const [bookIndex, setBookIndex] = useState(0);
@@ -36,7 +36,7 @@ export default function Pdf() {
       setFilesize(config.size);
       setLoading(false);
     })();
-    if (getItemValue('pdf/useOrigin')!) setUseOrigin(getItemValue('pdf/useOrigin')!);
+    if (getItemValue('pdf/useOrigin')) setNotUseOrigin(getItemValue('pdf/useOrigin'));
   }, []);
   useEffect(() => {
     const ele = (LoadingProgress.current as any)?.childNodes[0] as HTMLElement;
@@ -141,14 +141,14 @@ export default function Pdf() {
               className='select-none text-nowrap'
               control={
                 <Checkbox
-                  checked={useOrigin}
+                  checked={notUseOrigin}
                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                    setUseOrigin(event.target.checked);
+                    setNotUseOrigin(event.target.checked);
                     setItemValue('pdf/useOrigin', event.target.checked);
                   }}
                 />
               }
-              label='使用浏览器PDF阅读器'
+              label='不使用浏览器PDF阅读器'
             />
             <Button
               variant='contained'
@@ -159,7 +159,11 @@ export default function Pdf() {
             </Button>
           </div>
         </div>
-        {useOrigin ? <PdfContentOrigin content={config!.content}></PdfContentOrigin> : <PdfContent content={config!.content}></PdfContent>}
+        {!notUseOrigin ? (
+          <PdfContentOrigin content={config!.content}></PdfContentOrigin>
+        ) : (
+          <PdfContent content={config!.content}></PdfContent>
+        )}
       </div>
     </>
   );

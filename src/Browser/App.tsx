@@ -60,7 +60,11 @@ export default function App() {
       });
       setRollList(roll_list as unknown as string[]);
       setDownloadCountTotal(roll_list.length);
-      setTitle(html_parased.querySelector('.Z_clearfix .title')?.innerHTML.trim()!);
+      let title_pre =
+        (html_parased.querySelector('.Z_clearfix .title')?.textContent?.trim() || '') +
+        '_' +
+        window.location.search.match(/&fid=([0-9]*)/)![1];
+      setTitle(title_pre);
       setLoading(false);
     })();
     if (getItemValue('browser/MAX_CONCURRENT_DOWNLOADS')) setMAX_CONCURRENT_DOWNLOADS(getItemValue('browser/MAX_CONCURRENT_DOWNLOADS')!);
