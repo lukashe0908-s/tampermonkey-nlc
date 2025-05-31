@@ -7,7 +7,7 @@
     "express": "^5.1.0"
   },
   "scripts": {
-    "build": "node --experimental-sea-config sea-config.json && node -e \"require('fs').copyFileSync(process.execPath, 'dist/index.exe')\" && postject dist/index.exe NODE_SEA_BLOB dist/bundle.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 --overwrite"
+    "build": "rollup -c && node --experimental-sea-config sea-config.json && node -e \"require('fs').copyFileSync(process.execPath, 'dist/index.exe')\" && postject dist/index.exe NODE_SEA_BLOB dist/bundle.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 --overwrite"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.3",
