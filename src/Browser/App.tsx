@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Button, Skeleton, TextField, Slider } from '@mui/material';
 import axios from 'axios';
 import lodash from 'lodash';
-import { fileConfig, downloadFile } from './util';
+import { fileConfig, downloadFile } from '../util';
 import { Download } from './Download';
 
 let stop = true;
@@ -37,8 +37,12 @@ export default function App() {
   }, [downloadCountTotal]);
   useEffect(() => {
     (async () => {
+      if (window.location.pathname === '/') {
+        setLoading(false);
+        return;
+      }
       let url = domain + window.location.href.replace(/https?:\/\/[^/]*?\//, '/');
-      console.log(url);
+      // console.log(url);
       const html = await (
         await fetch(url, {
           referrerPolicy: 'no-referrer',
@@ -58,8 +62,8 @@ export default function App() {
       setTitle(html_parased.querySelector('.Z_clearfix .title')?.innerHTML.trim()!);
       setLoading(false);
     })();
-    if (typeof GM_getValue === 'function' && GM_getValue('MAX_CONCURRENT_DOWNLOADS')!)
-      setMAX_CONCURRENT_DOWNLOADS(GM_getValue('MAX_CONCURRENT_DOWNLOADS')!);
+    if (typeof GM_getValue === 'function' && GM_getValue('browser/MAX_CONCURRENT_DOWNLOADS')!)
+      setMAX_CONCURRENT_DOWNLOADS(GM_getValue('browser/MAX_CONCURRENT_DOWNLOADS')!);
     let currentDownloadsPercent: number[] = [];
     for (let i = 0; i < MAX_CONCURRENT_DOWNLOADS; i++) {
       currentDownloadsPercent[i] = 0;
@@ -128,12 +132,12 @@ export default function App() {
                             if (forceStop) controller.abort();
                           }, 10);
                           let response = await fetch(
-                            `${domain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`,
+                            config.url,
                             {
                               method: 'GET',
                               referrer: 'http://read.nlc.cn/static/webpdf/lib/WebPDFJRWorker.js',
                               headers: {
-                                myreader: tokenKey,
+                                myreader: config.token,
                               },
                             }
                           );
@@ -240,8 +244,8 @@ export default function App() {
                                 stop = true;
                               }
                             } catch (error) {
-                              // console.error('下载出错:', error);
-                              await tryD();
+                              if (typeof unsafeWindow != 'undefined') unsafeWindow.alert('下载出错:' + error);
+                              // await tryD();
                             } finally {
                             }
                           }
@@ -288,9 +292,9 @@ export default function App() {
                   }
 
                   if (isNaN(thread) || thread < 1) thread = 1;
-                  if (thread > 256) thread = 256;
+                  if (thread > 32) thread = 32;
                   setMAX_CONCURRENT_DOWNLOADS(thread);
-                  if (typeof GM_setValue === 'function') GM_setValue('MAX_CONCURRENT_DOWNLOADS', thread);
+                  if (typeof GM_setValue === 'function') GM_setValue('browser/MAX_CONCURRENT_DOWNLOADS', thread);
                   let currentDownloadsPercent: number[] = [];
                   for (let i = 0; i < thread; i++) {
                     currentDownloadsPercent[i] = 0;

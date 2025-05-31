@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { Button, Box, LinearProgress, Skeleton, TextField, Autocomplete } from '@mui/material';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import { downloadFile, formatFileSize, fileConfig } from './util';
+import { downloadFile, formatFileSize, fileConfig } from '../util';
 import lodash from 'lodash';
 
 export function Download({
@@ -34,8 +34,8 @@ export function Download({
     { label: '自动下载,不缓存', value: 2 },
   ];
   useEffect(() => {
-    if (typeof GM_getValue === 'function' && GM_getValue('downloadOptionSelected')!)
-      setDownloadOptionSelected(GM_getValue('downloadOptionSelected')!);
+    if (typeof GM_getValue === 'function' && GM_getValue('browser/downloadOptionSelected')!)
+      setDownloadOptionSelected(GM_getValue('browser/downloadOptionSelected')!);
   }, []);
   return (
     <>
@@ -95,7 +95,7 @@ export function Download({
           }
           onChange={(event: any, newValue: any) => {
             setDownloadOptionSelected(newValue.value);
-            if (typeof GM_setValue === 'function') GM_setValue('downloadOptionSelected', newValue.value);
+            if (typeof GM_setValue === 'function') GM_setValue('browser/downloadOptionSelected', newValue.value);
           }}
         />
       </div>

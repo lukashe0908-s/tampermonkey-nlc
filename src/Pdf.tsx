@@ -37,7 +37,7 @@ export default function Pdf() {
       setFilesize(config.size);
       setLoading(false);
     })();
-    if (typeof GM_getValue === 'function' && GM_getValue('useOrigin')!) setUseOrigin(GM_getValue('useOrigin')!);
+    if (typeof GM_getValue === 'function' && GM_getValue('pdf/useOrigin')!) setUseOrigin(GM_getValue('pdf/useOrigin')!);
   }, []);
   useEffect(() => {
     const ele = (LoadingProgress.current as any)?.childNodes[0] as HTMLElement;
@@ -145,7 +145,7 @@ export default function Pdf() {
                   checked={useOrigin}
                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                     setUseOrigin(event.target.checked);
-                    if (typeof GM_setValue === 'function') GM_setValue('useOrigin', event.target.checked);
+                    if (typeof GM_setValue === 'function') GM_setValue('pdf/useOrigin', event.target.checked);
                   }}
                 />
               }

@@ -2,7 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import { Snackbar, Fade } from '@mui/material';
-import App from './App';
+import App from './Selector';
 import Pdf from './Pdf';
 
 async function main() {
@@ -28,7 +28,7 @@ async function main() {
       return true;
     };
   }
-  if (window.location.href.match(/\/allSearch\/searchDetail/)) {
+  if (window.location.href.match(/\/allSearch\/searchDetail/) || process.env.NODE_ENV === 'development') {
     const body =
       document.querySelector('.SZZY2018_Book')?.parentElement || document.querySelector('.GYYD2019_Book')?.parentElement || document.body;
     const container = document.createElement('div');
@@ -37,9 +37,6 @@ async function main() {
     body?.appendChild(container);
 
     try {
-      let script = document.createElement('script');
-      script.src = 'https://cdn.tailwindcss.com/3.4.3';
-      document.documentElement.appendChild(script);
       document.body.classList.add('transition-all');
       document.querySelector('.FenXiang')?.remove();
       document.querySelector('.YMH2019_New_Book_Main')?.classList.add('rounded-2xl');
@@ -64,15 +61,17 @@ async function main() {
         ele.querySelector('.a2')?.classList.add('hover:!text-white');
       });
       document.querySelector('.YMH2019_New_ft')?.remove();
+      document.querySelector('.YMH2019_New_Book_Main + .YMH2019_New_Book_module1 .more')?.remove();
+      document.querySelector('.YMH2019_New_Book_Main + .YMH2019_New_Book_module1 .Z_clearfix')?.classList.add('!max-h-none');
     } catch (e) {
       console.error(e);
     }
     const callback = function (mutationsList: any[], observer: MutationObserver) {
       document.querySelector('#multiple')?.classList.add('!block');
-      document.querySelectorAll('a:not([class="hover:!text-blue-600"]').forEach(ele => {
-        ele.classList.add('hover:!text-blue-600');
-        ele.classList.add('!no-underline');
-      });
+      // document.querySelectorAll('a:not([class="hover:!text-blue-600"]').forEach(ele => {
+      //   ele.classList.add('hover:!text-blue-600');
+      //   ele.classList.add('!no-underline');
+      // });
       document.querySelectorAll('.pic:not([class="!rounded-lg"]),.pic:not([class="!rounded-lg"]) *').forEach(ele => {
         ele.classList.add('!rounded-lg');
       });
@@ -101,7 +100,7 @@ async function main() {
 }
 document.addEventListener('DOMContentLoaded', () => {
   main();
-  unsafeWindow.DisableDevtool.isSuspend = true;
+  if (typeof unsafeWindow != 'undefined') unsafeWindow.DisableDevtool.isSuspend = true;
 });
 
 function htmlDecode(text: string): string {
