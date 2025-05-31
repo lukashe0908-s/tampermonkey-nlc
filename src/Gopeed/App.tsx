@@ -132,6 +132,8 @@ export default function App() {
     setCurrentProgress(0);
     setLogList([]);
 
+    const downloadDelay = parseInt(getItemValue('gopeed/downloadDelay') || '1000', 10);
+
     for (let i = downloadCountTotalSelected[0] - 1; i <= downloadCountTotalSelected[1] - 1; i++) {
       if (stopFlagRef.current) {
         setLogList(prev => [...prev, `🟡 已停止，未完成后续下载。`]);
@@ -147,7 +149,7 @@ export default function App() {
       }
 
       setCurrentProgress(i - (downloadCountTotalSelected[0] - 2)); // 从 1 开始数
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, downloadDelay));
     }
 
     setIsDownloading(false);
@@ -183,6 +185,7 @@ export default function App() {
             <TextField
               type='number'
               label='起始'
+              className='w-[8em]'
               value={downloadCountTotalSelected[0]}
               onChange={e => setDownloadCountTotalSelected([Math.max(1, +e.target.value), downloadCountTotalSelected[1]])}
               inputProps={{ min: 1, max: downloadCountTotal }}
@@ -190,6 +193,7 @@ export default function App() {
             <TextField
               type='number'
               label='结束'
+              className='w-[8em]'
               value={downloadCountTotalSelected[1]}
               onChange={e => setDownloadCountTotalSelected([downloadCountTotalSelected[0], Math.min(downloadCountTotal, +e.target.value)])}
               inputProps={{ min: 1, max: downloadCountTotal }}

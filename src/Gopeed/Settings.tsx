@@ -5,6 +5,7 @@ import { getItemValue, setItemValue } from '../util';
 export default function Settings() {
   const [folderPath, setFolderPath] = useState('');
   const [folderStructure, setFolderStructure] = useState('flat');
+  const [downloadDelay, setDownloadDelay] = useState('300');
   const [apiIP, setApiIP] = useState('127.0.0.1');
   const [apiPort, setApiPort] = useState('9999');
   const [apiToken, setApiToken] = useState('');
@@ -15,6 +16,7 @@ export default function Settings() {
     setApiPort(getItemValue('gopeed/apiPort') || '9999');
     setApiToken(getItemValue('gopeed/apiToken'));
     setFolderStructure(getItemValue('gopeed/folderStructure') || 'flat');
+    setDownloadDelay(getItemValue('gopeed/downloadDelay') || '1000');
   }, []);
 
   function updateValue(key: string, value: string, setter: (v: string) => void) {
@@ -26,7 +28,7 @@ export default function Settings() {
     <div className='px-1 py-4 flex flex-col gap-4 !text-[16px]'>
       <Card className='!rounded-lg p-3' variant='outlined'>
         <div className='my-2'>
-          <p className='font-bold text-xl'>下载格式</p>
+          <p className='font-bold text-xl'>下载</p>
           <TextField
             label='下载文件夹路径'
             variant='standard'
@@ -46,6 +48,16 @@ export default function Settings() {
             <MenuItem value='folder'>目录结构（使用标题创建文件夹）</MenuItem>
             <MenuItem value='folder-index-name'>目录结构（使用标题创建文件夹，文件名仅包含序号）</MenuItem>
           </TextField>
+          <br />
+          <TextField
+            label='下载间隔（ms）'
+            variant='standard'
+            className='w-[10em] max-w-full !mr-4'
+            type='number'
+            value={downloadDelay}
+            onChange={e => updateValue('gopeed/downloadDelay', e.target.value, setDownloadDelay)}
+            helperText='每次下载之间的等待时间'
+          />
         </div>
         <Divider></Divider>
         <div className='my-2'>
