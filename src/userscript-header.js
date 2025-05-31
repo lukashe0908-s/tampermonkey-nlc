@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name     React Userscripts for read.nlc.cn
+// @name     read.nlc.cn 网站优化
 // @namespace https://github.com/siefkenj/crowdmark-addons
-// @version  1.14
-// @description A sample userscript built using react
+// @version  1.15
+// @description 增加书籍下载，优化书籍阅读
 // @include *://read.nlc.cn*
 // @run-at   document-start
 // @grant    GM_getValue
