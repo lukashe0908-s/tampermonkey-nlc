@@ -4,6 +4,7 @@ import { Button, Box, LinearProgress, Skeleton, TextField, Autocomplete } from '
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { downloadFile, formatFileSize, fileConfig } from '../util';
 import lodash from 'lodash';
+import { getItemValue, setItemValue } from '../util';
 
 export function Download({
   fileList,
@@ -34,8 +35,7 @@ export function Download({
     { label: '自动下载,不缓存', value: 2 },
   ];
   useEffect(() => {
-    if (typeof GM_getValue === 'function' && GM_getValue('browser/downloadOptionSelected')!)
-      setDownloadOptionSelected(GM_getValue('browser/downloadOptionSelected')!);
+    if (getItemValue('browser/downloadOptionSelected')) setDownloadOptionSelected(getItemValue('browser/downloadOptionSelected'));
   }, []);
   return (
     <>
@@ -48,8 +48,7 @@ export function Download({
                 variant='determinate'
                 value={value}
                 key={index}
-                className={`w-full first:!rounded-l-full last:!rounded-r-full`}
-              ></LinearProgress>
+                className={`w-full first:!rounded-l-full last:!rounded-r-full`}></LinearProgress>
             );
           })}
         </div>
@@ -76,8 +75,7 @@ export function Download({
                 })();
               }
             })();
-          }}
-        >
+          }}>
           <FileDownloadIcon></FileDownloadIcon>
           全部下载到本地
         </Button>
@@ -95,15 +93,14 @@ export function Download({
           }
           onChange={(event: any, newValue: any) => {
             setDownloadOptionSelected(newValue.value);
-            if (typeof GM_setValue === 'function') GM_setValue('browser/downloadOptionSelected', newValue.value);
+            setItemValue('browser/downloadOptionSelected', newValue.value);
           }}
         />
       </div>
 
       <Box
         component='section'
-        className={`!rounded-lg border-2 ${downloadFinished ? 'border-green-400' : 'border-yellow-400'} border-dashed transition-all`}
-      >
+        className={`!rounded-lg border-2 ${downloadFinished ? 'border-green-400' : 'border-yellow-400'} border-dashed transition-all`}>
         <VirtuosoGrid
           listClassName='flex flex-wrap'
           itemClassName='w-1/3 flex-none p-1'
@@ -125,8 +122,7 @@ export function Download({
                         !(downloadCountTotal === 1),
                         downloadCountTotal_length
                       );
-                  }}
-                >
+                  }}>
                   <div className='normal-case break-all'>{title}</div>
                   <div className='normal-case flex gap-1 text-white'>
                     <div className='px-1 rounded-md bg-blue-600'>
@@ -136,8 +132,7 @@ export function Download({
                   </div>
                 </Button>
               );
-          }}
-        ></VirtuosoGrid>
+          }}></VirtuosoGrid>
       </Box>
     </>
   );

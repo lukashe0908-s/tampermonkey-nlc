@@ -3,17 +3,18 @@ import { Tab, Tabs, Box } from '@mui/material';
 import Browser from './Browser/App';
 import Gopeed from './Gopeed/App';
 import GopeedSettings from './Gopeed/Settings';
+import { getItemValue, setItemValue } from './util';
 
 export default function DownloaderSelector() {
   const [tabValue, setTabValue] = useState(0);
 
   useEffect(() => {
-    if (typeof GM_getValue === 'function' && GM_getValue('defaultTab')!) setTabValue(GM_getValue('defaultTab'));
+    if (getItemValue('defaultTab')!) setTabValue(getItemValue('defaultTab'));
   }, []);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
-    if (typeof GM_setValue === 'function') GM_setValue('defaultTab', newValue);
+    setItemValue('defaultTab', newValue);
   };
 
   return (

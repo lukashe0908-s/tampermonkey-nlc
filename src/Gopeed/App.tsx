@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { Button, Skeleton, TextField, Slider } from '@mui/material';
 import lodash from 'lodash';
+import { getItemValue, setItemValue } from '../util';
 
 export default function App() {
   const domain = `${process.env.NODE_ENV === 'development' ? 'http://localhost:12100/' : ''}http://read.nlc.cn`;
@@ -8,6 +9,9 @@ export default function App() {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [downloadCountTotal, setDownloadCountTotal] = useState(0);
+  const downloadCountTotal_length = useMemo(() => {
+    return Math.max(downloadCountTotal.toString().length, 2);
+  }, [downloadCountTotal]);
   const [downloadCountTotalSelected, setDownloadCountTotalSelected] = useState([1, 1]);
   const [isDownloading, setIsDownloading] = useState(false);
   const stopFlagRef = useRef(false);
@@ -66,12 +70,28 @@ export default function App() {
     }
     const url = `${domain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`;
 
-    const apiIP = GM_getValue('apiIP') || '127.0.0.1';
-    const apiPort = GM_getValue('apiPort') || 9999;
-    const apiToken = GM_getValue('apiToken') || '';
-    const folderPath = GM_getValue('folderPath') || '';
+    let apiIP = getItemValue('gopeed/apiIP') || '127.0.0.1';
+    const apiPort = getItemValue('gopeed/apiPort') || 9999;
+    const apiToken = getItemValue('gopeed/apiToken') || '';
+    let folderPath = getItemValue('gopeed/folderPath') || '';
+    folderPath = folderPath.replace(/[\\/]+$/, ''); // 去除结尾的 / 或 \
+    const folderStructure = getItemValue('gopeed/folderStructure') || 'flat';
 
-    const fileName = `${title}_${index.toString().padStart(4, '0')}.pdf`;
+    let fileName = `${title}_${index.toString().padStart(downloadCountTotal_length, '0')}.pdf`;
+    if (folderStructure === 'folder') {
+      if (folderPath) {
+        folderPath = `${folderPath}/${title}`;
+      } else {
+        folderPath = title;
+      }
+    } else if (folderStructure === 'folder-index-name') {
+      if (folderPath) {
+        folderPath = `${folderPath}/${title}`;
+      } else {
+        folderPath = title;
+      }
+      fileName = `${index.toString().padStart(downloadCountTotal_length, '0')}.pdf`;
+    }
     const apiURL = `http://${apiIP}:${apiPort}/api/v1/tasks`;
 
     let callApiResult = await (

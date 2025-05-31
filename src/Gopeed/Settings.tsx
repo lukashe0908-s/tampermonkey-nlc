@@ -1,23 +1,24 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Button, Skeleton, TextField, Slider, Card, Divider } from '@mui/material';
+import { Button, Skeleton, TextField, Slider, Card, Divider, MenuItem } from '@mui/material';
+import { getItemValue, setItemValue } from '../util';
 
 export default function Settings() {
   const [folderPath, setFolderPath] = useState('');
+  const [folderStructure, setFolderStructure] = useState('flat');
   const [apiIP, setApiIP] = useState('127.0.0.1');
   const [apiPort, setApiPort] = useState('9999');
   const [apiToken, setApiToken] = useState('');
 
   useEffect(() => {
-    if (typeof GM_getValue === 'function') {
-      setFolderPath(GM_getValue('folderPath'));
-      setApiIP(GM_getValue('apiIP'));
-      setApiPort(GM_getValue('apiPort'));
-      setApiToken(GM_getValue('apiToken'));
-    }
+    setFolderPath(getItemValue('gopeed/folderPath'));
+    setApiIP(getItemValue('gopeed/apiIP'));
+    setApiPort(getItemValue('gopeed/apiPort'));
+    setApiToken(getItemValue('gopeed/apiToken'));
+    setFolderStructure(getItemValue('gopeed/folderStructure'));
   }, []);
 
   function updateValue(key: string, value: string, setter: (v: string) => void) {
-    if (typeof GM_setValue === 'function') GM_setValue(key, value);
+    setItemValue(key, value);
     setter(value);
   }
 
@@ -25,14 +26,26 @@ export default function Settings() {
     <div className='px-1 py-4 flex flex-col gap-4 !text-[16px]'>
       <Card className='!rounded-lg p-3' variant='outlined'>
         <div className='my-2'>
-          <p className='font-bold text-xl'>下载位置</p>
+          <p className='font-bold text-xl'>下载格式</p>
           <TextField
-            label='文件夹路径'
+            label='下载文件夹路径'
             variant='standard'
-            className='w-[20em] max-w-full !mr-2'
+            className='w-[20em] max-w-full !mr-4'
             value={folderPath}
-            onChange={e => updateValue('folderPath', e.target.value, setFolderPath)}
+            onChange={e => updateValue('gopeed/folderPath', e.target.value, setFolderPath)}
           />
+          <TextField
+            select
+            label='目录结构'
+            variant='standard'
+            className='w-[20em] max-w-full !mr-4'
+            value={folderStructure}
+            onChange={e => updateValue('gopeed/folderStructure', e.target.value, setFolderStructure)}
+            helperText='选择下载的保存路径结构'>
+            <MenuItem value='flat'>扁平化（默认）</MenuItem>
+            <MenuItem value='folder'>目录结构（使用标题创建文件夹）</MenuItem>
+            <MenuItem value='folder-index-name'>目录结构（使用标题创建文件夹，文件名仅包含序号）</MenuItem>
+          </TextField>
         </div>
         <Divider></Divider>
         <div className='my-2'>
@@ -42,7 +55,7 @@ export default function Settings() {
             variant='standard'
             className='w-[13em] max-w-full !mr-2'
             value={apiIP}
-            onChange={e => updateValue('apiIP', e.target.value, setApiIP)}
+            onChange={e => updateValue('gopeed/apiIP', e.target.value, setApiIP)}
           />
           <TextField
             label='连接端口'
@@ -50,7 +63,7 @@ export default function Settings() {
             className='w-[6em] max-w-full'
             type='number'
             value={apiPort}
-            onChange={e => updateValue('apiPort', e.target.value, setApiPort)}
+            onChange={e => updateValue('gopeed/apiPort', e.target.value, setApiPort)}
           />
           <br />
           <TextField
@@ -58,7 +71,7 @@ export default function Settings() {
             variant='standard'
             className='w-[20em] max-w-full'
             value={apiToken}
-            onChange={e => updateValue('apiToken', e.target.value, setApiToken)}
+            onChange={e => updateValue('gopeed/apiToken', e.target.value, setApiToken)}
           />
         </div>
       </Card>

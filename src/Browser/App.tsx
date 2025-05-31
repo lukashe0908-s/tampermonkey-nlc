@@ -4,6 +4,7 @@ import axios from 'axios';
 import lodash from 'lodash';
 import { fileConfig, downloadFile } from '../util';
 import { Download } from './Download';
+import { getItemValue, setItemValue } from '../util';
 
 let stop = true;
 let forceStop = false;
@@ -62,8 +63,7 @@ export default function App() {
       setTitle(html_parased.querySelector('.Z_clearfix .title')?.innerHTML.trim()!);
       setLoading(false);
     })();
-    if (typeof GM_getValue === 'function' && GM_getValue('browser/MAX_CONCURRENT_DOWNLOADS')!)
-      setMAX_CONCURRENT_DOWNLOADS(GM_getValue('browser/MAX_CONCURRENT_DOWNLOADS')!);
+    if (getItemValue('browser/MAX_CONCURRENT_DOWNLOADS')) setMAX_CONCURRENT_DOWNLOADS(getItemValue('browser/MAX_CONCURRENT_DOWNLOADS')!);
     let currentDownloadsPercent: number[] = [];
     for (let i = 0; i < MAX_CONCURRENT_DOWNLOADS; i++) {
       currentDownloadsPercent[i] = 0;
@@ -131,16 +131,13 @@ export default function App() {
                           const interval = setInterval(() => {
                             if (forceStop) controller.abort();
                           }, 10);
-                          let response = await fetch(
-                            config.url,
-                            {
-                              method: 'GET',
-                              referrer: 'http://read.nlc.cn/static/webpdf/lib/WebPDFJRWorker.js',
-                              headers: {
-                                myreader: config.token,
-                              },
-                            }
-                          );
+                          let response = await fetch(config.url, {
+                            method: 'GET',
+                            referrer: 'http://read.nlc.cn/static/webpdf/lib/WebPDFJRWorker.js',
+                            headers: {
+                              myreader: config.token,
+                            },
+                          });
 
                           const reader = response.body!.getReader();
                           const contentLength: any = response.headers.get('Content-Length');
@@ -294,7 +291,7 @@ export default function App() {
                   if (isNaN(thread) || thread < 1) thread = 1;
                   if (thread > 32) thread = 32;
                   setMAX_CONCURRENT_DOWNLOADS(thread);
-                  if (typeof GM_setValue === 'function') GM_setValue('browser/MAX_CONCURRENT_DOWNLOADS', thread);
+                  setItemValue('browser/MAX_CONCURRENT_DOWNLOADS', thread);
                   let currentDownloadsPercent: number[] = [];
                   for (let i = 0; i < thread; i++) {
                     currentDownloadsPercent[i] = 0;

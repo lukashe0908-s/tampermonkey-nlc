@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, LinearProgress, Checkbox, FormGroup, FormControlLabel } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import { formatFileSize, fileConfigBlob, downloadFile } from './util';
-import axios from 'axios';
-import lodash from 'lodash';
+import { getItemValue, setItemValue } from './util';
 
 interface configFromUri {
   aid?: string;
@@ -37,7 +36,7 @@ export default function Pdf() {
       setFilesize(config.size);
       setLoading(false);
     })();
-    if (typeof GM_getValue === 'function' && GM_getValue('pdf/useOrigin')!) setUseOrigin(GM_getValue('pdf/useOrigin')!);
+    if (getItemValue('pdf/useOrigin')!) setUseOrigin(getItemValue('pdf/useOrigin')!);
   }, []);
   useEffect(() => {
     const ele = (LoadingProgress.current as any)?.childNodes[0] as HTMLElement;
@@ -145,7 +144,7 @@ export default function Pdf() {
                   checked={useOrigin}
                   onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                     setUseOrigin(event.target.checked);
-                    if (typeof GM_setValue === 'function') GM_setValue('pdf/useOrigin', event.target.checked);
+                    setItemValue('pdf/useOrigin', event.target.checked);
                   }}
                 />
               }

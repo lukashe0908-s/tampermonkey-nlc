@@ -38,3 +38,32 @@ export function formatFileSize(fileSize: number) {
     return temp + 'GB';
   }
 }
+
+export function getItemValue(key: string): any {
+  if (typeof GM_getValue === 'function') {
+    return GM_getValue(key);
+  } else {
+    let settings: any = localStorage.getItem('settings');
+    if (settings) {
+      try {
+        settings = JSON.parse(settings);
+        return settings[key];
+      } catch (error) {}
+    }
+    return;
+  }
+}
+export function setItemValue(key: string, value: any): void {
+  if (typeof GM_setValue === 'function') {
+    GM_setValue(key, value);
+  } else {
+    let settings: any = localStorage.getItem('settings');
+    if (settings) {
+      settings = JSON.parse(settings);
+    } else {
+      settings = {};
+    }
+    settings[key] = value;
+    localStorage.setItem('settings', JSON.stringify(settings));
+  }
+}
