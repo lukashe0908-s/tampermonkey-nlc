@@ -14,7 +14,7 @@ export default function Settings() {
   useEffect(() => {
     setFolderPath(getItemValue('gopeed/folderPath'));
     setApiIP(getItemValue('gopeed/apiIP') || '127.0.0.1');
-    setApiPort(getItemValue('gopeed/apiPort') || '31561');
+    setApiPort(getItemValue('gopeed/apiPort') || '9999');
     setApiToken(getItemValue('gopeed/apiToken'));
     setFolderStructure(getItemValue('gopeed/folderStructure') || 'flat');
     setDownloadDelay(getItemValue('gopeed/downloadDelay') || '1000');
@@ -109,7 +109,7 @@ export default function Settings() {
         </a>
         <br />
         <p className='mr-1'>Gopeed Fork版 下载</p>
-        <a href='https://github.com/GopeedLab/gopeed/releases' target='_blank' rel='noreferrer' className='text-blue-600'>
+        <a href='https://github.com/LukasHe0908/gopeed/releases' target='_blank' rel='noreferrer' className='text-blue-600'>
           Github
         </a>
         <br />

@@ -77,7 +77,7 @@ export default function App() {
     const url = `${originDomain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`;
 
     let apiIP = getItemValue('gopeed/apiIP') || '127.0.0.1';
-    const apiPort = getItemValue('gopeed/apiPort') || 31561;
+    const apiPort = getItemValue('gopeed/apiPort') || 9999;
     const apiToken = getItemValue('gopeed/apiToken') || '';
     let folderPath = getItemValue('gopeed/folderPath') || '';
     folderPath = folderPath.replace(/[\\/]+$/, ''); // 去除结尾的 / 或 \
