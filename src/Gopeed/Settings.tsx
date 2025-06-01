@@ -5,6 +5,7 @@ import { getItemValue, setItemValue } from '../util';
 export default function Settings() {
   const [folderPath, setFolderPath] = useState('');
   const [folderStructure, setFolderStructure] = useState('flat');
+  const [titleStructure, setTitleStructure] = useState('title-id');
   const [downloadDelay, setDownloadDelay] = useState('300');
   const [downloadCookie, setDownloadCookie] = useState('');
   const [apiIP, setApiIP] = useState('127.0.0.1');
@@ -17,6 +18,7 @@ export default function Settings() {
     setApiPort(getItemValue('gopeed/apiPort') || '9999');
     setApiToken(getItemValue('gopeed/apiToken'));
     setFolderStructure(getItemValue('gopeed/folderStructure') || 'flat');
+    setTitleStructure(getItemValue('titleStructure') || 'title-id');
     setDownloadDelay(getItemValue('gopeed/downloadDelay') || '1000');
     setDownloadCookie(getItemValue('gopeed/downloadCookie') || '');
   }, []);
@@ -47,8 +49,19 @@ export default function Settings() {
             onChange={e => updateValue('gopeed/folderStructure', e.target.value, setFolderStructure)}
             helperText='选择下载的保存路径结构'>
             <MenuItem value='flat'>扁平化（默认）</MenuItem>
-            <MenuItem value='folder'>目录结构（使用标题创建文件夹）</MenuItem>
-            <MenuItem value='folder-index-name'>目录结构（使用标题创建文件夹，文件名仅包含序号）</MenuItem>
+            <MenuItem value='folder'>目录结构</MenuItem>
+            <MenuItem value='folder-index-name'>目录结构（文件名仅包含序号）</MenuItem>
+          </TextField>
+          <TextField
+            select
+            label='标题结构'
+            variant='standard'
+            className='w-[20em] max-w-full !mr-4'
+            value={titleStructure}
+            onChange={e => updateValue('titleStructure', e.target.value, setTitleStructure)}>
+            <MenuItem value='title-id'>标题+id</MenuItem>
+            <MenuItem value='title'>仅标题</MenuItem>
+            <MenuItem value='id'>仅id</MenuItem>
           </TextField>
           <br />
           <TextField
@@ -107,12 +120,13 @@ export default function Settings() {
         <a href='https://github.com/GopeedLab/gopeed/releases' target='_blank' rel='noreferrer' className='text-blue-600'>
           Github
         </a>
-        <br />
-        <p className='mr-1'>Gopeed Fork版 下载</p>
-        <a href='https://github.com/LukasHe0908/gopeed/releases' target='_blank' rel='noreferrer' className='text-blue-600'>
-          Github
-        </a>
-        <br />
+        <br /> <br />
+        <p className='mr-1'>
+          Gopeed Fork版 下载：
+          <a href='https://github.com/LukasHe0908/gopeed/releases' target='_blank' rel='noreferrer' className='text-blue-600'>
+            Github
+          </a>
+        </p>
         <p>提示：请下载 Fork版 以确保能够正常下载</p>
       </Card>
     </div>

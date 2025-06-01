@@ -64,7 +64,7 @@ function makeRes(body, status = 200, headers = {}) {
  */
 async function fetchHandler(request, resource) {
   const urlStr = request.protocol + '://' + request.get('host') + request.url;
-  console.log(request.method, urlStr, request.headers);
+  // console.log(request.method, urlStr, request.headers);
 
   const urlObj = new URL(urlStr);
   let path = urlObj.href.replace(urlObj.origin + '/', '');

@@ -49,21 +49,24 @@ export default function App() {
           referrerPolicy: 'no-referrer',
         })
       ).text();
-      let parser = new DOMParser();
-      let html_parased = parser.parseFromString(html, 'text/html');
-      let roll_list = [...html.matchAll(/\/OutOpenBook\/OpenObjectBook\?aid=([0-9]*?)&bid=([0-9.]*)/g)];
-      roll_list = lodash.uniqWith(roll_list, lodash.isEqual);
-      roll_list = roll_list.map((value: any, index) => {
+      const parser = new DOMParser();
+      const htmlParsed = parser.parseFromString(html, 'text/html');
+      let rollListMatch = [...html.matchAll(/\/OutOpenBook\/OpenObjectBook\?aid=([0-9]*?)&bid=([0-9.]*)/g)];
+      rollListMatch = lodash.uniqWith(rollListMatch, lodash.isEqual);
+      const rollList = rollListMatch.map((value: any, index) => {
         let foo = value;
         foo[0] = index.toString();
         return foo;
       });
-      setRollList(roll_list as unknown as string[]);
-      setDownloadCountTotal(roll_list.length);
-      let title_pre =
-        (html_parased.querySelector('.Z_clearfix .title')?.textContent?.trim() || '') +
-        '_' +
-        window.location.search.match(/&fid=([0-9]*)/)![1];
+      setRollList(rollList as unknown as string[]);
+      setDownloadCountTotal(rollList.length);
+      let titleStructure = getItemValue('titleStructure') || 'title-id';
+      let title_pre = htmlParsed.querySelector('.Z_clearfix .title')?.textContent?.trim() || '';
+      if (titleStructure === 'title-id') {
+        title_pre += '_' + window.location.search.match(/&fid=([^&]*)/)![1];
+      } else if (titleStructure === 'id') {
+        title_pre = window.location.search.match(/&fid=([^&]*)/)![1];
+      }
       setTitle(title_pre);
       setLoading(false);
     })();
@@ -157,7 +160,7 @@ export default function App() {
                             chunks.push(value);
                             receivedLength += value.length;
 
-                            console.log(`Received ${receivedLength} of ${contentLength}`);
+                            // console.log(`Received ${receivedLength} of ${contentLength}`);
                             let percentCompleted = (receivedLength / contentLength) * 100;
                             currentDownloadsPercent[workerId] = percentCompleted;
                             setDownloadProgress([...currentDownloadsPercent]);

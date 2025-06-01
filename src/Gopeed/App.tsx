@@ -46,10 +46,13 @@ export default function App() {
       setRollList(rollList);
       setDownloadCountTotal(rollList.length);
       setDownloadCountTotalSelected([1, rollList.length]);
-      let title_pre =
-        (htmlParsed.querySelector('.Z_clearfix .title')?.textContent?.trim() || '') +
-        '_' +
-        window.location.search.match(/&fid=([0-9]*)/)![1];
+      let titleStructure = getItemValue('titleStructure') || 'title-id';
+      let title_pre = htmlParsed.querySelector('.Z_clearfix .title')?.textContent?.trim() || '';
+      if (titleStructure === 'title-id') {
+        title_pre += '_' + window.location.search.match(/&fid=([^&]*)/)![1];
+      } else if (titleStructure === 'id') {
+        title_pre = window.location.search.match(/&fid=([^&]*)/)![1];
+      }
       setTitle(title_pre);
       setLoading(false);
     })();
