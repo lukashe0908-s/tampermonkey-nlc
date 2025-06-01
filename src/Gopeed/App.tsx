@@ -238,7 +238,7 @@ export default function App() {
 
   async function waitForAvailableSlot() {
     while (true) {
-      const runningTasks = taskList.filter(t => t.status === 'running').length;
+      const runningTasks = taskList.filter(t => t.status === 'running' || t.status === 'wait' || t.status === 'ready').length;
       if (runningTasks < concurrency) {
         break;
       }
