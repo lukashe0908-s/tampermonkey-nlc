@@ -4,34 +4,8 @@ const http = require('http');
 const https = require('https');
 
 const config = (() => {
-  // let config_json;
-  // try {
-  //   config_json = JSON.parse(process.env.CONFIG);
-  // } catch {
-  //   try {
-  //     config_json = JSON.parse(fs.readFileSync('./config.json').toString());
-  //   } catch {
-  //     console.log('[软件]', `Config Error`);
-  //     config_json = {};
-  //   }
-  // }
-  // let part_tls = {};
-  // if (config_json['tls']) {
-  //   part_tls = {
-  //     ...part_tls,
-  //     use_tls: config_json['tls']['use'] || false,
-  //     // please use base64 encode
-  //     tls_key: Buffer.from(config_json['tls']['key'], 'base64').toString() || '',
-  //     tls_cert: Buffer.from(config_json['tls']['cert'], 'base64').toString() || '',
-  //   };
-  // }
-  // return {
-  //   port: config_json['port'] || 12100,
-  //   // tls
-  //   ...part_tls,
-  // };
   return {
-    port:  12100,
+    port: 12100,
   };
 })();
 const express = require('express');
@@ -39,12 +13,6 @@ const compression = require('compression');
 const app = express();
 app.disable('x-powered-by');
 app.use(compression());
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,POST,PUT,DELETE,CONNECT,OPTIONS,TRACE,PATCH');
-  res.setHeader('Access-Control-Allow-Headers', '*,Authorization');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  next();
-});
 
 app.use((req, res, next) => {
   let data = [];
@@ -94,68 +62,72 @@ function makeRes(body, status = 200, headers = {}) {
 /**
  * @param {FetchEvent} e
  */
-async function fetchHandler(req, res) {
-  const urlStr = req.protocol + '://' + req.get('host') + req.url;
-  const urlObj = new URL(urlStr);
-  if (urlObj.pathname == '/generate_204') {
-    return makeRes('', 204);
-  } else if (urlObj.pathname.startsWith('/http') || urlObj.pathname.startsWith('/:http') || urlObj.pathname.startsWith('/;')) {
-    let path = urlObj.href.replace(urlObj.origin + '/', '');
-    path = path.replace(/http:\/(?!\/)/g, 'http://');
-    path = path.replace(/https:\/(?!\/)/g, 'https://');
-    // console.log(req.headers.get('referer'));
-    let referer = undefined;
-    if (path.substring(0, 1) == ':') {
-      let path_split = path.split(':');
-      if (req.headers.get('referer')) {
-        referer = req.headers.get('referer');
-      }
-      let array = [];
-      for (let i = 0; i + 1 < path_split.length; i++) {
-        array[i] = path_split[i + 1];
-      }
-      path = array.join(':');
-    } else if (path.substring(0, 1) == ';') {
-      let path_split = path.split(';');
-      // console.log(path_split[1]);
-      referer = path_split[1];
-      let array = [];
-      for (let i = 0; i + 2 < path_split.length; i++) {
-        array[i] = path_split[i + 2];
-      }
-      path = array.join(';');
-    }
-    // console.log(path);
+async function fetchHandler(request, resource) {
+  const urlStr = request.protocol + '://' + request.get('host') + request.url;
+  console.log(request.method, urlStr, request.headers);
 
-    fetchAndApply(path, req, res, referer);
-    return undefined;
-  } else {
-    try {
-      return makeRes('NULL');
-    } catch (error) {
-      return makeRes('Error:\n' + error, 502);
-    }
+  const urlObj = new URL(urlStr);
+  let path = urlObj.href.replace(urlObj.origin + '/', '');
+  path = path.replace(/http:\/(?!\/)/g, 'http://');
+  path = path.replace(/https:\/(?!\/)/g, 'https://');
+  let redirect = false;
+
+  if (path == 'generate_204') {
+    return makeRes('', 204);
+  }
+  if (path.startsWith('generate_200')) {
+    return makeRes('', 200);
+  }
+  // /all/:others
+  if (path.startsWith('all/')) {
+    path = path.slice(4);
+    redirect = true;
+  }
+  // /:link
+  if (path.startsWith('http')) {
+    return fetchAndApply(path, request, resource, { follow_redirect: redirect });
+  }
+  // /set_referer/:referer header/:link
+  if (path.startsWith('set_referer/')) {
+    let url_split = path.slice('set_referer/'.length);
+    url_split = url_split.split('/http');
+    const referer = url_split[0];
+    const realUrl = 'http' + url_split[1];
+
+    return fetchAndApply(realUrl, request, { follow_redirect: redirect, referer });
+  }
+  // /keep_referer/:link
+  if (path.startsWith('keep_referer/')) {
+    const realUrl = path.slice('keep_referer/'.length);
+    const referer = request.headers['referer'];
+    return fetchAndApply(realUrl, request, resource, { follow_redirect: redirect, referer: referer });
+  }
+  try {
+    return makeRes('NULL');
+  } catch (error) {
+    return makeRes('Error:\n' + error, 502);
   }
 }
 
-async function fetchAndApply(host, request, resource, referer) {
+async function fetchAndApply(host, request, resource, options = {}) {
   // console.log(request);
   let f_url;
   try {
     f_url = new URL(host);
-    // f_url = new URL(request.url);
-    // f_url.href = host;
   } catch (error) {
     return error;
   }
 
   let response = null;
+  const referer = options.referer;
+  const follow_redirect = options.follow_redirect;
   if (!CFproxy) {
     response = await _request(f_url.href, {
       method: request.method,
       body: request.body,
       headers: request.headers,
       stream: true,
+      follow_redirect,
     });
   } else {
     let method = request.method;
@@ -173,6 +145,7 @@ async function fetchAndApply(host, request, resource, referer) {
       body: body,
       headers: new_request_headers,
       stream: true,
+      follow_redirect,
     });
   }
 
@@ -183,6 +156,10 @@ async function fetchAndApply(host, request, resource, referer) {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Max-Age': '86400',
   };
+  // 分块传输时content-length不被发送
+  // https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Reference/Headers/Transfer-Encoding
+  delete out_headers['content-length'];
+
   let out_body = response.data;
 
   resource.writeHead(response.status, out_headers);
@@ -235,12 +212,11 @@ function listen_port() {
 keepalive();
 function keepalive() {
   // 保持唤醒
-  let url_host = '';
-  url_host = process.env.RENDER_EXTERNAL_HOSTNAME;
-  if (!url_host) return;
+  let keepalive_url = process.env.KEPP_ALIVE_URL;
+  if (!keepalive_url) return;
   https
-    .get(`https://${url_host}/generate_204`, res => {
-      if (res.statusCode == 204) {
+    .get(keepalive_url, res => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
       } else {
         console.log('请求错误: ' + res.statusCode);
       }
@@ -250,19 +226,17 @@ function keepalive() {
     });
   setTimeout(() => {
     keepalive();
-  }, (Math.ceil(Math.random() * 15) * 1000 * 60) / 2);
+  }, Math.ceil(Math.random() * 5 + 5) * 1000 * 60);
 }
 
-async function _request(url, { stream = false, method = 'GET', headers = null, body = null } = {}) {
+async function _request(url, { stream = false, method = 'GET', headers = null, body = null, follow_redirect = true } = {}) {
   return new Promise((resolve, reject) => {
     axios({
       method: method,
       url: url,
       data: body,
       headers: headers,
-      transformResponse: res => {
-        return res;
-      },
+      maxRedirects: follow_redirect ? 5 : 0,
       responseType: stream ? 'stream' : 'arraybuffer',
     })
       .then(response => {

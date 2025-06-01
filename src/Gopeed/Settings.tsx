@@ -104,9 +104,16 @@ export default function Settings() {
           官网
         </a>
         &ensp;&ensp;&ensp;&ensp;
-        <a href='https://github.com/GopeedLab/gopeed/releases/latest' target='_blank' rel='noreferrer' className='text-blue-600'>
+        <a href='https://github.com/GopeedLab/gopeed/releases' target='_blank' rel='noreferrer' className='text-blue-600'>
           Github
         </a>
+        <br />
+        <p className='mr-1'>Gopeed Fork版 下载</p>
+        <a href='https://github.com/GopeedLab/gopeed/releases' target='_blank' rel='noreferrer' className='text-blue-600'>
+          Github
+        </a>
+        <br />
+        <p>提示：请下载 Fork版 以确保能够正常下载</p>
       </Card>
     </div>
   );

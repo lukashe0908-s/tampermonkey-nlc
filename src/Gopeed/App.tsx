@@ -4,7 +4,8 @@ import lodash from 'lodash';
 import { getItemValue, setItemValue, GM_ListCookie } from '../util';
 
 export default function App() {
-  const domain = `${process.env.NODE_ENV === 'development' ? 'http://localhost:12100/' : ''}http://read.nlc.cn`;
+  const originDomain = 'http://read.nlc.cn';
+  const domain = `${process.env.NODE_ENV === 'development' ? 'http://localhost:12100/' : ''}${originDomain}`;
   const [rollList, setRollList] = useState<string[][]>([]);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(true);
@@ -73,7 +74,7 @@ export default function App() {
     if (!tokenKey || !timeKey || !timeFlag) {
       throw new Error(`第 ${index} 页未能提取下载参数`);
     }
-    const url = `${domain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`;
+    const url = `${originDomain}/menhu/OutOpenBook/getReaderNew?aid=${aid}&bid=${bid}&kime=${timeKey}&fime=${timeFlag}`;
 
     let apiIP = getItemValue('gopeed/apiIP') || '127.0.0.1';
     const apiPort = getItemValue('gopeed/apiPort') || 31561;
@@ -125,7 +126,7 @@ export default function App() {
             ...(folderPath ? { path: folderPath } : {}),
             extra: {
               connections: 1,
-              autoTorrent: false,
+              notRange: true,
             },
           },
         }),
