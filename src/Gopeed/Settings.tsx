@@ -31,59 +31,66 @@ export default function Settings() {
   return (
     <div className='px-1 py-4 flex flex-col gap-4 !text-[16px]'>
       <Card className='!rounded-lg p-3' variant='outlined'>
-        <div className='my-2'>
+        <div className='my-2 mx-4'>
           <p className='font-bold text-xl'>下载</p>
-          <TextField
-            label='下载文件夹路径'
-            variant='standard'
-            className='w-[20em] max-w-full !mr-4'
-            value={folderPath}
-            onChange={e => updateValue('gopeed/folderPath', e.target.value, setFolderPath)}
-          />
-          <TextField
-            select
-            label='目录结构'
-            variant='standard'
-            className='w-[20em] max-w-full !mr-4'
-            value={folderStructure}
-            onChange={e => updateValue('gopeed/folderStructure', e.target.value, setFolderStructure)}
-            helperText='选择下载的保存路径结构'>
-            <MenuItem value='flat'>扁平化（默认）</MenuItem>
-            <MenuItem value='folder'>目录结构</MenuItem>
-            <MenuItem value='folder-index-name'>目录结构（文件名仅包含序号）</MenuItem>
-          </TextField>
-          <TextField
-            select
-            label='标题结构'
-            variant='standard'
-            className='w-[20em] max-w-full !mr-4'
-            value={titleStructure}
-            onChange={e => updateValue('titleStructure', e.target.value, setTitleStructure)}>
-            <MenuItem value='title-id'>标题+id</MenuItem>
-            <MenuItem value='title'>仅标题</MenuItem>
-            <MenuItem value='id'>仅id</MenuItem>
-          </TextField>
-          <br />
-          <TextField
-            label='下载间隔（ms）'
-            variant='standard'
-            className='w-[10em] max-w-full !mr-4'
-            type='number'
-            value={downloadDelay}
-            onChange={e => updateValue('gopeed/downloadDelay', e.target.value, setDownloadDelay)}
-            helperText='每次下载之间的等待时间'
-          />
-          <TextField
-            label='自定义请求Cookie'
-            variant='standard'
-            className='w-[20em] max-w-full !mr-4'
-            value={downloadCookie}
-            onChange={e => updateValue('gopeed/downloadCookie', e.target.value, setDownloadCookie)}
-            helperText=''
-          />
+          <div className='flex gap-2 flex-col'>
+            <TextField
+              label='下载文件夹路径'
+              variant='standard'
+              className='w-[20em] max-w-full !mr-4'
+              value={folderPath}
+              onChange={e => updateValue('gopeed/folderPath', e.target.value, setFolderPath)}
+            />
+            <Divider></Divider>
+            <div>
+              <TextField
+                select
+                label='目录结构'
+                variant='standard'
+                className='w-[20em] max-w-full !mr-4'
+                value={folderStructure}
+                onChange={e => updateValue('gopeed/folderStructure', e.target.value, setFolderStructure)}
+                helperText='选择下载的保存路径结构'>
+                <MenuItem value='flat'>扁平化（默认）</MenuItem>
+                <MenuItem value='folder'>目录结构</MenuItem>
+                <MenuItem value='folder-index-name'>目录结构（文件名仅包含序号）</MenuItem>
+              </TextField>
+              <TextField
+                select
+                label='标题结构'
+                variant='standard'
+                className='w-[20em] max-w-full !mr-4'
+                value={titleStructure}
+                onChange={e => updateValue('titleStructure', e.target.value, setTitleStructure)}>
+                <MenuItem value='title-id'>标题+id</MenuItem>
+                <MenuItem value='title'>仅标题</MenuItem>
+                <MenuItem value='id'>仅id</MenuItem>
+              </TextField>
+            </div>
+            <Divider></Divider>
+            <div>
+              <TextField
+                label='下载间隔（ms）'
+                variant='standard'
+                className='w-[10em] max-w-full !mr-4'
+                type='number'
+                value={downloadDelay}
+                onChange={e => updateValue('gopeed/downloadDelay', e.target.value, setDownloadDelay)}
+                helperText='每次下载之间的等待时间'
+              />
+              <TextField
+                label='自定义请求Cookie'
+                variant='standard'
+                className='w-[20em] max-w-full !mr-4'
+                value={downloadCookie}
+                onChange={e => updateValue('gopeed/downloadCookie', e.target.value, setDownloadCookie)}
+                helperText=''
+              />
+            </div>
+          </div>
         </div>
         <Divider></Divider>
-        <div className='my-2'>
+        <div className='my-2 mx-4'>
           <p className='font-bold text-xl'>API连接</p>
           <TextField
             label='连接IP'
