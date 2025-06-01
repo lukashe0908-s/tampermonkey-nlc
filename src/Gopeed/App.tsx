@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Button, Skeleton, TextField, Slider } from '@mui/material';
+import { Virtuoso, VirtuosoGrid } from 'react-virtuoso';
 import lodash from 'lodash';
-import { getItemValue, setItemValue, GM_ListCookie } from '../util';
+import { getItemValue, setItemValue, formatFileSize } from '../util';
 
 export default function App() {
   const originDomain = 'http://read.nlc.cn';
@@ -19,6 +20,10 @@ export default function App() {
   const [currentProgress, setCurrentProgress] = useState(0);
   const [logList, setLogList] = useState<string[]>([]);
   const logBoxRef = useRef<HTMLDivElement>(null);
+  const virtuosoGridRef = useRef(null as any);
+  const [taskIdSet, setTaskIdSet] = useState<Set<string>>(new Set());
+  const [taskList, setTaskList] = useState<any[]>([]);
+  const [concurrency, setConcurrency] = useState(3);
 
   const downloadCountTotalSelectedCount = useMemo(() => {
     if (downloadCountTotal === 0) return 0;
@@ -26,6 +31,7 @@ export default function App() {
   }, [downloadCountTotalSelected, downloadCountTotal]);
 
   useEffect(() => {
+    setConcurrency(getItemValue('gopeed/concurrency') || 3);
     (async () => {
       if (window.location.pathname === '/') {
         setLoading(false);
@@ -60,10 +66,62 @@ export default function App() {
     })();
   }, []);
   useEffect(() => {
+    const apiIP = getItemValue('gopeed/apiIP') || '127.0.0.1';
+    const apiPort = getItemValue('gopeed/apiPort') || 9999;
+    const apiToken = getItemValue('gopeed/apiToken') || '';
+
+    let intervalTime = 1000; // 初始刷新间隔 1 秒
+    let interval: NodeJS.Timeout;
+
+    async function refresh() {
+      try {
+        const res = await fetch(`http://${apiIP}:${apiPort}/api/v1/tasks?notStatus=adone`, {
+          headers: { 'X-Api-Token': apiToken },
+        });
+        const json = await res.json();
+        if (json.code !== 0) throw new Error('API返回错误');
+
+        const tasks = json.data.filter((t: any) => taskIdSet.has(t.id));
+        setTaskList(tasks);
+
+        // 成功时把间隔改回 1 秒（防止之前是 10 秒）
+        if (intervalTime !== 1000) {
+          intervalTime = 1000;
+          clearInterval(interval);
+          interval = setInterval(refresh, intervalTime);
+        }
+      } catch (e) {
+        // 失败时改成10秒间隔（只有不等于才切换，避免重复清理和设置）
+        if (intervalTime !== 10000) {
+          intervalTime = 10000;
+          clearInterval(interval);
+          interval = setInterval(refresh, intervalTime);
+        }
+      }
+    }
+
+    refresh(); // 立即调用一次
+    interval = setInterval(refresh, intervalTime);
+
+    return () => clearInterval(interval);
+  }, [taskIdSet]);
+  useEffect(() => {
     if (logBoxRef.current) {
-      logBoxRef.current.scrollTop = logBoxRef.current.scrollHeight;
+      logBoxRef.current.scrollTo({
+        behavior: 'smooth',
+        top: logBoxRef.current.scrollHeight,
+      });
     }
   }, [logList]);
+  useEffect(() => {
+    if (virtuosoGridRef.current) {
+      virtuosoGridRef.current.scrollToIndex({
+        index: taskList.length - 1,
+        align: 'end',
+        behavior: 'smooth',
+      });
+    }
+  }, [taskList]);
 
   async function downloadSingle(aid: string, bid: string, index: number) {
     let customCookie = getItemValue('gopeed/downloadCookie');
@@ -138,6 +196,7 @@ export default function App() {
       })
     ).json();
     if (callApiResult.code !== 0) throw new Error(`API Return with Code ${callApiResult.code}. Reason: ${callApiResult.msg}`);
+    return callApiResult;
   }
 
   async function startDownload() {
@@ -157,18 +216,34 @@ export default function App() {
       }
 
       const [aid, bid] = rollList[i];
+      const index = i + 1;
+
+      await waitForAvailableSlot(); // 等待有线程槽
+
       try {
-        await downloadSingle(aid, bid, i + 1);
-        setLogList(prev => [...prev, `✅ 第 ${i + 1} 页 下载成功`]);
+        const result = await downloadSingle(aid, bid, index);
+        setTaskIdSet(prev => new Set([...prev, result.data])); // 添加任务ID到监听集
+        setLogList(prev => [...prev, `✅ 第 ${i + 1} 页 下载创建成功`]);
       } catch (error: any) {
-        setLogList(prev => [...prev, `❌ 第 ${i + 1} 页 下载失败：${error.message}`]);
+        console.error(`第 ${index} 页 下载失败：${error.message}`);
+        setLogList(prev => [...prev, `❌ 第 ${i + 1} 页 下载创建失败：${error.message}`]);
       }
 
-      setCurrentProgress(i - (downloadCountTotalSelected[0] - 2)); // 从 1 开始数
+      setCurrentProgress(index - downloadCountTotalSelected[0] + 1);
       await new Promise(r => setTimeout(r, downloadDelay));
     }
 
     setIsDownloading(false);
+  }
+
+  async function waitForAvailableSlot() {
+    while (true) {
+      const runningTasks = taskList.filter(t => t.status === 'running').length;
+      if (runningTasks < concurrency) {
+        break;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
   }
 
   async function stopDownload() {
@@ -179,7 +254,7 @@ export default function App() {
   return (
     <div className='px-4 py-6 flex flex-col gap-4 text-[16px]'>
       {loading ? (
-        <Skeleton animation='wave' className='!h-[20em] !transform-none !rounded-[1em]' />
+        <Skeleton animation='wave' className='!h-[40em] !transform-none !rounded-[1em]' />
       ) : downloadCountTotal === 0 ? (
         <div className='flex justify-center'>
           <div className='rounded-lg border-2 border-red-400 border-dashed transition-all text-4xl font-bold text-center p-4'>
@@ -235,6 +310,33 @@ export default function App() {
             <Button variant='outlined' color='error' onClick={stopDownload}>
               停止
             </Button>
+            <TextField
+              label='下载线程'
+              variant='standard'
+              type='number'
+              value={concurrency}
+              onChange={e => {
+                let thread = Number(e.target.value);
+
+                if (isNaN(thread)) return;
+
+                // 自动矫正范围
+                if (thread < 1) thread = 1;
+                if (thread > 32) thread = 32;
+
+                setConcurrency(thread);
+                setItemValue('gopeed/concurrency', thread);
+                setCurrentProgress(thread);
+              }}
+              onBlur={e => {
+                if (e.target.value === '') {
+                  setConcurrency(1);
+                  setItemValue('gopeed/concurrency', 1);
+                  setCurrentProgress(1);
+                }
+              }}
+            />
+
             <div className='text-gray-600'>
               总页数：{downloadCountTotal}，当前选择：{downloadCountTotalSelectedCount} 页
             </div>
@@ -245,7 +347,28 @@ export default function App() {
               当前进度：{currentProgress}/{downloadCountTotalSelectedCount}
             </div>
           }
-          <div ref={logBoxRef} className='h-[20em] overflow-y-auto text-sm bg-gray-100 p-2 rounded-lg border'>
+          <VirtuosoGrid
+            ref={virtuosoGridRef}
+            listClassName='flex flex-wrap'
+            itemClassName='w-auto flex-none p-1'
+            style={{ height: '20em' }}
+            totalCount={taskList.length}
+            itemContent={index => {
+              const task = taskList[index];
+              return (
+                <>
+                  <div className='border-blue-400 !rounded-lg w-full flex-col border-2 p-4'>
+                    <div className='font-semibold text-blue-700'>{task.name}</div>
+                    <div className='text-sm text-gray-500'>状态：{task.status}</div>
+                    <div className='text-sm'>已下载：{formatFileSize(task.progress.downloaded)}</div>
+                    <div className='text-sm text-gray-500'>速度：{formatFileSize(task.progress.speed)}/s</div>
+                  </div>
+                </>
+              );
+            }}
+          />
+
+          <div ref={logBoxRef} className='h-[10em] overflow-y-auto text-sm bg-gray-100 p-2 rounded-lg border'>
             {logList.map((log, index) => (
               <div key={index} className='whitespace-pre-wrap'>
                 {log}
