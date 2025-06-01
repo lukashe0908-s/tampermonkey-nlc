@@ -23,6 +23,7 @@ export default function App() {
   const virtuosoGridRef = useRef(null as any);
   const [taskIdSet, setTaskIdSet] = useState<Set<string>>(new Set());
   const [taskList, setTaskList] = useState<any[]>([]);
+  const taskListRef = useRef<any[]>([]);
   const [concurrency, setConcurrency] = useState(3);
 
   const downloadCountTotalSelectedCount = useMemo(() => {
@@ -114,6 +115,7 @@ export default function App() {
     }
   }, [logList]);
   useEffect(() => {
+    taskListRef.current = taskList;
     if (virtuosoGridRef.current) {
       virtuosoGridRef.current.scrollToIndex({
         index: taskList.length - 1,
@@ -238,7 +240,7 @@ export default function App() {
 
   async function waitForAvailableSlot() {
     while (true) {
-      const runningTasks = taskList.filter(t => t.status === 'running' || t.status === 'wait' || t.status === 'ready').length;
+      const runningTasks = taskListRef.current.filter(t => t.status === 'running' || t.status === 'wait' || t.status === 'ready').length;
       if (runningTasks < concurrency) {
         break;
       }
