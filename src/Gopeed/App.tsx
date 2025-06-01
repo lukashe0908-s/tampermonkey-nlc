@@ -83,7 +83,8 @@ export default function App() {
         if (json.code !== 0) throw new Error('API返回错误');
 
         const tasks = json.data.filter((t: any) => taskIdSet.has(t.id));
-        setTaskList(tasks);
+
+        if (!lodash.isEqual(taskListRef.current, tasks)) setTaskList(tasks);
 
         // 成功时把间隔改回 1 秒（防止之前是 10 秒）
         if (intervalTime !== 1000) {
