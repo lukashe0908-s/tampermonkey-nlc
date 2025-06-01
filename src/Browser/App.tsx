@@ -62,10 +62,12 @@ export default function App() {
       setDownloadCountTotal(rollList.length);
       let titleStructure = getItemValue('titleStructure') || 'title-id';
       let title_pre = htmlParsed.querySelector('.Z_clearfix .title')?.textContent?.trim() || '';
+      const fidMatch = window.location.search.match(/&fid=([^&]*)/);
+      const fid = fidMatch?.[1] || 'unknown';
       if (titleStructure === 'title-id') {
-        title_pre += '_' + window.location.search.match(/&fid=([^&]*)/)![1];
+        title_pre += '_' + fid;
       } else if (titleStructure === 'id') {
-        title_pre = window.location.search.match(/&fid=([^&]*)/)![1];
+        title_pre = fid;
       }
       setTitle(title_pre);
       setLoading(false);

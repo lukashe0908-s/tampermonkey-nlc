@@ -48,10 +48,12 @@ export default function App() {
       setDownloadCountTotalSelected([1, rollList.length]);
       let titleStructure = getItemValue('titleStructure') || 'title-id';
       let title_pre = htmlParsed.querySelector('.Z_clearfix .title')?.textContent?.trim() || '';
+      const fidMatch = window.location.search.match(/&fid=([^&]*)/);
+      const fid = fidMatch?.[1] || 'unknown';
       if (titleStructure === 'title-id') {
-        title_pre += '_' + window.location.search.match(/&fid=([^&]*)/)![1];
+        title_pre += '_' + fid;
       } else if (titleStructure === 'id') {
-        title_pre = window.location.search.match(/&fid=([^&]*)/)![1];
+        title_pre = fid;
       }
       setTitle(title_pre);
       setLoading(false);
@@ -201,16 +203,28 @@ export default function App() {
               label='起始'
               className='w-[8em]'
               value={downloadCountTotalSelected[0]}
-              onChange={e => setDownloadCountTotalSelected([Math.max(1, +e.target.value), downloadCountTotalSelected[1]])}
-              inputProps={{ min: 1, max: downloadCountTotal }}
+              onChange={e => {
+                let start = parseInt(e.target.value, 10) || 1;
+                let end = downloadCountTotalSelected[1];
+                // 校正范围
+                start = Math.max(1, Math.min(start, downloadCountTotal)); // 1 <= start <= total
+                if (start > end) end = start;
+                setDownloadCountTotalSelected([start, end]);
+              }}
             />
             <TextField
               type='number'
               label='结束'
               className='w-[8em]'
               value={downloadCountTotalSelected[1]}
-              onChange={e => setDownloadCountTotalSelected([downloadCountTotalSelected[0], Math.min(downloadCountTotal, +e.target.value)])}
-              inputProps={{ min: 1, max: downloadCountTotal }}
+              onChange={e => {
+                let end = parseInt(e.target.value, 10) || 1;
+                let start = downloadCountTotalSelected[0];
+                // 校正范围
+                end = Math.max(1, Math.min(end, downloadCountTotal)); // 1 <= end <= total
+                if (end < start) start = end;
+                setDownloadCountTotalSelected([start, end]);
+              }}
             />
           </div>
 
